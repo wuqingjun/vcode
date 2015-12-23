@@ -25,22 +25,52 @@ window.addEventListener('DOMContentLoaded', function () {
 			new BABYLON.Vector3(-0.5, -0.5, 0)], scene);
 		lines.parent = this.element;
 		this.element.position.x = xpos;
-		this.element.position.y = ypos;
+        this.element.position.y = ypos;
 	}
 	
 	Element.prototype.rotate = function (x, y, z) {
 		this.element.rotation = new BABYLON.Vector3(Math.PI * x / 180, Math.PI * y / 180, Math.PI * z / 180);
+    }
+    
+    Element.prototype.position = function (x, y, z){
+        this.element.position.x = x;
+        this.element.position.y = y;
+        this.element.position.z = z;
+    }
+    
+    Element.prototype.translate = function (dx, dy, dz){
+        this.element.position.x += dx;
+        this.element.position.y += dy;
+        this.element.position.z += dz;
+    }
+	
+	List = function(eles, scene, shape) {
+        this.elements = [];
+		for (var i = 0; i < eles.length; ++i) {
+            this.elements.push(new Element(eles[i], scene, shape, i, 0));
+            if (i > 0) {
+                this.elements[i].element.parent = this.elements[0].element;
+            }
+        }
 	}
 	
-	//Array = function(elements, len, scene, shape, xpos, ypos, isvertical, dir) {
-	//	this.elements = [];
-	//	for (var i = 0; i < len; ++i) {
-	//		var e = new Element(elements[i], scene, shape, xpos + (isvertical ? 0 : dir * i), ypos + (isvertical ? dir * i : 0));
-	//		this.elements.push(e);
-	//	}
-	//}
-	
-	
+    List.prototype.position = function (x, y, z){
+        if (this.elements.length) {
+            this.elements[0].position(x, y, z);
+        }
+    }
+    
+    List.prototype.translate = function (dx, dy, dz){
+        if (this.elements.length) {
+            this.elements[0].translate(dx, dy, dz);
+        }
+    }
+
+    List.prototype.rotate = function (x, y, z){
+        if (this.elements.length > 0) {
+            this.elements[0].rotate(x, y, z);
+        }
+    }
 
 	var createArray = function (elements, len, scene, shape, xpos, ypos, isvertical, dir) {
 		var arr = [];
@@ -89,12 +119,7 @@ window.addEventListener('DOMContentLoaded', function () {
 		return head;
 	}
 	
-	var createFormula = function (scene, sum) {
-		var e = new Element(sum, scene, 'square', -6, 2);
-		e.material.specularColor = new BABYLON.Color3(0, 1, 1);
-	}
-	
-	
+
 	var total = 0;
 	var count = 0;
 	var map = [];
@@ -116,9 +141,16 @@ window.addEventListener('DOMContentLoaded', function () {
 		camera.setTarget(BABYLON.Vector3.Zero());
 		camera.attachControl(canvas, true);
 		
-		var ele = new Element('1', scene, 'square', 0, 0);
-		ele.rotate(0, 0, 45);
-		
+		//var ele = new Element('1', scene, 'square', 0, 0);
+		//ele.rotate(0, 0, 45);
+  //      ele.position(3, 3, 3);
+  //      ele.translate(2, 0, 0);
+  //      ele.rotate(0, 0, 45);
+        
+        var list = new List(elements, scene, 'square');
+        list.position(2, -2, 0);
+        list.rotate(0, 0, 45);
+        list.translate(-2, -2, -2);
 		//var arrow = createArrow(1, scene);
 		//arrow.rotation = new BABYLON.Vector3(0, 0, -Math.PI / 2);
 		//var l = createLinkedList(elements, scene, 'square');
