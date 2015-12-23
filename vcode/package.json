@@ -1,0 +1,13 @@
+{
+  "name": "vcode",
+  "version": "0.0.0",
+  "description": "vcode",
+  "main": "server.js",
+  "author": {
+    "name": "qjwu9_000",
+    "email": ""
+  },
+  "dependencies": {
+    "express": "^4.13.3"
+  }
+}
