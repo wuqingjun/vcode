@@ -75,6 +75,13 @@ window.addEventListener('DOMContentLoaded', function () {
             this.elements[0].rotate(x, y, z);
         }
     }
+    
+    function Arrow(scale, scene) {
+        this.element = BABYLON.Mesh.CreateLines('arrow', [new BABYLON.Vector3(0, 1 * scale, 0), new BABYLON.Vector3(0, 0, 0),
+                new BABYLON.Vector3(-0.375 * scale, 0.5 * scale, 0), new BABYLON.Vector3(0, 0, 0),
+                new BABYLON.Vector3(0.375 * scale, 0.5 * scale, 0), new BABYLON.Vector3(0, 0, 0)],
+                                    scene);
+    }
 
 	var createArray = function (elements, len, scene, shape, xpos, ypos, isvertical, dir) {
 		var arr = [];
@@ -125,18 +132,77 @@ window.addEventListener('DOMContentLoaded', function () {
     
     
     function VcElement(v) {
-    this.value = v;
-    this.shape = 'square';
-    this.x = globalx;
-    this.y = globaly;
-}
-
-    
-    VcElement.prototype.Draw = function (scene) {
-        Element(this.value, scene, this.shape, this.x, this.y);
+        this.value = v;
+        this.shape = 'square';
+        this.x = globalx;
+        this.y = globaly;
     }
     
     
+    VcElement.prototype.Draw = function (scene) {
+        var e = new Element(this.value, scene, this.shape, this.x, this.y);
+        this.mesh = e.element;
+        return this.mesh;
+    }
+    
+    function VcArray(arr){
+        this.value = arr;
+        this.shape = 'square';
+        this.x = globalx;
+        this.y = globaly;
+    }
+    
+    VcArray.prototype.Draw = function (scene){
+        var l = new List(this.value, scene, this.shape);
+        this.mesh = l.elements.length ? l.elements[0].element : null;
+    }
+    
+    function NewLine(n){
+        globaly += n || 1;
+    }
+    
+    function VcArrow (scale) {
+        this.scale = scale || 1;
+        this.x = globalx;
+        this.y = globaly;
+    }
+    
+    VcArrow.prototype.Draw = function(scene) {
+        this.mesh = BABYLON.Mesh.CreateLines('arrow', [new BABYLON.Vector3(0, 1 * this.scale, 0), new BABYLON.Vector3(0, 0, 0),
+            new BABYLON.Vector3(-0.375 * this.scale, 0.5 * this.scale, 0), new BABYLON.Vector3(0, 0, 0),
+            new BABYLON.Vector3(0.375 * this.scale, 0.5 * this.scale, 0), new BABYLON.Vector3(0, 0, 0)], scene);
+        this.mesh.position.x = this.x;
+        this.mesh.position.y = this.y;
+        return this.mesh;
+    }
+
+    function VcLinkedList(elements, shape){
+        this.value = elements;
+        this.shape = shape || 'square';
+        this.x = globalx;
+        this.y = globaly;
+    }
+    
+    VcLinkedList.prototype.Draw = function(scene) {
+        this.mesh = null;
+        for (var i = 0; i < this.value.length; ++i) {
+            var e = new Element(this.value[i], scene, this.shape, i * 2, 0);
+            if (this.mesh === null) {
+                this.mesh = e.element;
+            } else {
+                e.element.parent = this.mesh;
+            }
+            if (i != this.value.length - 1) {
+                var arrow = (new VcArrow()).Draw(scene);
+                arrow.rotation = new BABYLON.Vector3(0, 0, Math.PI / 2);
+                arrow.position.x = 2 * i + 1 + 0.5;
+                arrow.parent = this.mesh;
+            }
+        }
+        this.mesh.position.x = this.x;
+        this.mesh.position.y = this.y;
+        return this.mesh;
+    }
 
     var globalqueue = [];
 	var total = 0;
@@ -152,9 +218,13 @@ window.addEventListener('DOMContentLoaded', function () {
 	var canvas = document.getElementById('renderCanvas');
 	var engine = new BABYLON.Engine(canvas, true);
     
-    globalqueue.push(new VcElement(0));
-    ++globaly;
-    globalqueue.push(new VcElement(1));
+    //globalqueue.push(new VcElement(0));
+    NewLine(2);
+    //globalqueue.push(new VcElement(1));
+    //NewLine();
+    //globalqueue.push(new VcArray(elements));
+    //NewLine();
+    globalqueue.push(new VcLinkedList(elements));
 
 	var createScene = function (elements, map, hl) {
 		var scene = new BABYLON.Scene(engine);
