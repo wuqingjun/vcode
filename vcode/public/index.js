@@ -1,8 +1,12 @@
 ﻿
 
+
 window.addEventListener('DOMContentLoaded', function () {
-	
-	function Element(e, scene, shape, xpos, ypos) {
+    
+    var globalx = 0;
+    var globaly = 0;
+
+    function Element(e, scene, shape, xpos, ypos) {
 		var mat = new BABYLON.StandardMaterial("element", scene);
 		this.element = null;
 		if (shape == 'disc') {
@@ -117,9 +121,24 @@ window.addEventListener('DOMContentLoaded', function () {
 			}
 		}
 		return head;
-	}
-	
+    }
+    
+    
+    function VcElement(v) {
+    this.value = v;
+    this.shape = 'square';
+    this.x = globalx;
+    this.y = globaly;
+}
 
+    
+    VcElement.prototype.Draw = function (scene) {
+        Element(this.value, scene, this.shape, this.x, this.y);
+    }
+    
+    
+
+    var globalqueue = [];
 	var total = 0;
 	var count = 0;
 	var map = [];
@@ -132,25 +151,28 @@ window.addEventListener('DOMContentLoaded', function () {
 	var elements = [0, 2, 1, 6];
 	var canvas = document.getElementById('renderCanvas');
 	var engine = new BABYLON.Engine(canvas, true);
-	
+    
+    globalqueue.push(new VcElement(0));
+    ++globaly;
+    globalqueue.push(new VcElement(1));
+
 	var createScene = function (elements, map, hl) {
 		var scene = new BABYLON.Scene(engine);
 		scene.clearColor = new BABYLON.Color3(0, 0, 0);
 		
 		var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 0, -10), scene);
 		camera.setTarget(BABYLON.Vector3.Zero());
-		camera.attachControl(canvas, true);
-		
-		//var ele = new Element('1', scene, 'square', 0, 0);
-		//ele.rotate(0, 0, 45);
-  //      ele.position(3, 3, 3);
-  //      ele.translate(2, 0, 0);
-  //      ele.rotate(0, 0, 45);
+        camera.attachControl(canvas, true);
         
-        var list = new List(elements, scene, 'square');
-        list.position(2, -2, 0);
-        list.rotate(0, 0, 45);
-        list.translate(-2, -2, -2);
+        for (var i = 0; i < globalqueue.length; ++i) {
+            globalqueue[i].Draw(scene);
+        }
+		
+        //var ele1 = new Element('1', scene, 'square', 0, 0);
+        //var list = new List(elements, scene, 'square');
+        //list.position(2, -2, 0);
+        //list.rotate(0, 0, 45);
+        //list.translate(-2, -2, -2);
 		//var arrow = createArrow(1, scene);
 		//arrow.rotation = new BABYLON.Vector3(0, 0, -Math.PI / 2);
 		//var l = createLinkedList(elements, scene, 'square');
@@ -181,23 +203,10 @@ window.addEventListener('DOMContentLoaded', function () {
 	
 	engine.runRenderLoop(function () {
 		if (total % 20 == 0 && !stop) {
-			if (c < elements.length) {
-				if (map[elements[c]] === undefined) {
-					map[elements[c]] = [];
-				}
-				map[elements[c]].push(c);
-				++c;
-				var scene = createScene(elements, map, -1);
-				scene.render();
-			}
-			else if (hl < 6) {
-				++hl;
-				var scene = createScene(elements, map, hl);
-				scene.render();
-			}
+            var scene = createScene(elements, map, hl);
+            scene.render();
 		}
 		total++;
-
 	});
 	
 	// the canvas/window resize event handler
