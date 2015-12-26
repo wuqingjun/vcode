@@ -50,8 +50,10 @@ window.addEventListener('DOMContentLoaded', function () {
 	
     List = function (eles, scene, shape) {
         this.mesh = null;
+        this.elements = [];
         for (var i = 0; i < eles.length; ++i) {
             var e = new Element(eles[i], scene, shape, i, 0);
+            this.elements.push(e);
             if (i === 0) {
                 this.mesh = BABYLON.Mesh.CreateLines('anotherline', 
                                             [new BABYLON.Vector3(-0.5, -0.5, 0), new BABYLON.Vector3(-0.5, 0.5, 0)], 
@@ -75,9 +77,12 @@ window.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    List.prototype.rotate = function (x, y, z){
+    List.prototype.rotate = function (z){
+        for (var i = 0; i < this.elements.length; ++i) {
+            this.elements[i].element.rotation = new BABYLON.Vector3(Math.PI, 0, Math.PI * z / 180);
+        }
         if (this.mesh !== null) {
-            this.mesh.rotation = new BABYLON.Vector3(Math.PI * x / 180, Math.PI * y / 180, Math.PI * z / 180);
+            this.mesh.rotation = new BABYLON.Vector3(0, 0, Math.PI * z / 180);
         }
     }
     
@@ -226,11 +231,11 @@ window.addEventListener('DOMContentLoaded', function () {
     
     VcMap.prototype.Draw = function (scene){
         var x = 0, y = 0;
-        for (var k in mp.keys) {
+        for (var k in this.value) {
             var ek = new Element(k, scene, 'square', x, y);
-            var ev = new List(mp[k], scene, 'disc');
-            ev.position(x, y + 1, 0);
-            ev.rotate(0, 0, 0);
+            var ev = new List(this.value[k], scene, 'disc');
+            ev.position(x, y - 1, 0);
+            ev.rotate(-90);
             ++x;
         }
     }
@@ -256,6 +261,10 @@ window.addEventListener('DOMContentLoaded', function () {
     //globalqueue.push(new VcArray(elements));
     //NewLine();
     //globalqueue.push(new VcLinkedList(elements, 0, 'disc'));
+    map['a'] = [3, 5, 1];
+    map['b'] = [1, 2, 4];
+    map['cs'] = [2, 3, 5];
+    globalqueue.push(new VcMap(map));
 
 	var createScene = function (elements, map, hl) {
 		var scene = new BABYLON.Scene(engine);
@@ -270,9 +279,9 @@ window.addEventListener('DOMContentLoaded', function () {
         }
 		
         //var ele1 = new Element('1', scene, 'square', 0, 0);
-        var list = new List(elements, scene, 'disc');
-        list.position(1, 1, 1);
-        list.rotate(0, 0, 90);
+        //var list = new List(elements, scene, 'disc');
+        //list.position(1, 1, 0);
+        //list.rotate(0);
         //list.position(2, -2, 0);
         //list.rotate(0, 0, 45);
         //list.translate(-2, -2, -2);
