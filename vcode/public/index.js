@@ -6,7 +6,7 @@ window.addEventListener('DOMContentLoaded', function () {
     var globalx = 0;
     var globaly = 0;
 
-    function Element(e, scene, shape, xpos, ypos) {
+    function Element(e, scene, shape, xpos, ypos, highlighted) {
 		var mat = new BABYLON.StandardMaterial("element", scene);
 		this.element = null;
 		if (shape == 'disc') {
@@ -18,8 +18,9 @@ window.addEventListener('DOMContentLoaded', function () {
 		}
 		this.element.material = mat;
 		var tex = new BABYLON.DynamicTexture("dynamic texture", 512, scene, true);
-		this.element.material.diffuseTexture = tex;
-		this.element.material.emissiveColor = new BABYLON.Color3.Green;
+        this.element.material.diffuseTexture = tex;
+        this.highlighted = highlighted || false;
+		this.element.material.emissiveColor = highlighted ? new BABYLON.Color3.Yellow : new BABYLON.Color3.Green;
 		tex.drawText(e, 200, 300, "bold 170px Segoe UI", "black", "#555555");
 		var lines = BABYLON.Mesh.CreateLines("lines", [
 			new BABYLON.Vector3(-0.5, -0.5, 0),
@@ -48,11 +49,12 @@ window.addEventListener('DOMContentLoaded', function () {
         this.element.position.z += dz;
     }
 	
-    List = function (eles, scene, shape) {
+    List = function (eles, scene, shape, hlindex) {
         this.mesh = null;
         this.elements = [];
+        this.hlindex = hlindex;
         for (var i = 0; i < eles.length; ++i) {
-            var e = new Element(eles[i], scene, shape, i, 0);
+            var e = new Element(eles[i], scene, shape, i, 0, i === hlindex);
             this.elements.push(e);
             if (i === 0) {
                 this.mesh = BABYLON.Mesh.CreateLines('anotherline', 
@@ -162,10 +164,11 @@ window.addEventListener('DOMContentLoaded', function () {
         this.shape = 'square';
         this.x = globalx;
         this.y = globaly;
+        this.highlightedindex = -1;
     }
     
     VcArray.prototype.Draw = function (scene){
-        var l = new List(this.value, scene, this.shape);
+        var l = new List(this.value, scene, this.shape, this.highlightedindex);
         this.mesh = l.elements.length ? l.elements[0].element : null;
         this.mesh.position.x = this.x;
         this.mesh.position.y = this.y;
@@ -258,13 +261,15 @@ window.addEventListener('DOMContentLoaded', function () {
     //NewLine(2);
     //globalqueue.push(new VcElement(1));
     //NewLine();
-    //globalqueue.push(new VcArray(elements));
+    var vcarr = new VcArray(elements);
+    globalqueue.push(vcarr);
     //NewLine();
     //globalqueue.push(new VcLinkedList(elements, 0, 'disc'));
-    map['a'] = [3, 5, 1];
-    map['b'] = [1, 2, 4];
-    map['cs'] = [2, 3, 5];
-    globalqueue.push(new VcMap(map));
+    //map['a'] = [3, 5, 1];
+    //map['b'] = [1, 2, 4];
+    //map['cs'] = [2, 3, 5];
+    //NewLine();
+    //globalqueue.push(new VcMap(map));
 
 	var createScene = function (elements, map, hl) {
 		var scene = new BABYLON.Scene(engine);
@@ -277,6 +282,7 @@ window.addEventListener('DOMContentLoaded', function () {
         for (var i = 0; i < globalqueue.length; ++i) {
             globalqueue[i].Draw(scene);
         }
+       // stop = true;
 		
         //var ele1 = new Element('1', scene, 'square', 0, 0);
         //var list = new List(elements, scene, 'disc');
@@ -314,11 +320,18 @@ window.addEventListener('DOMContentLoaded', function () {
 	}
 	
 	engine.runRenderLoop(function () {
-		if (total % 20 == 0 && !stop) {
-            var scene = createScene(elements, map, hl);
-            scene.render();
+        if (!stop) {
+            if (total % 20 === 9) {
+                ++vcarr.highlightedindex;
+            } else if (total % 20 === 19) {
+                var scene = createScene(elements, map, hl);
+                scene.render();
+            }
 		}
-		total++;
+        total++;
+        if (total === 1000) {
+            stop = true;
+        }
 	});
 	
 	// the canvas/window resize event handler
