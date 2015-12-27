@@ -5,67 +5,119 @@ window.addEventListener('DOMContentLoaded', function () {
     
     var globalx = 0;
     var globaly = 0;
-
-    function Element(e, scene, shape, xpos, ypos, highlighted) {
-		var mat = new BABYLON.StandardMaterial("element", scene);
-		this.element = null;
-		if (shape == 'disc') {
-			this.element = BABYLON.Mesh.CreateDisc("element", 0.5, 40, scene, false, 2);
-			this.element.rotation = new BABYLON.Vector3(Math.PI, 0, 0);
-		}
-		else if (shape == 'square') {
-			this.element = BABYLON.Mesh.CreatePlane("element", 1, scene, false, 2);
-		}
-		this.element.material = mat;
-		var tex = new BABYLON.DynamicTexture("dynamic texture", 512, scene, true);
-        this.element.material.diffuseTexture = tex;
+    var predefinedshoworder = 0;
+    var globalshoworder = 0;
+    var globalhighlightorder = 0;
+   
+    function Element(v, shape, highlighted) {
+        this.value = v;
+        this.shape = 'square' || shape;
         this.highlighted = highlighted || false;
-		this.element.material.emissiveColor = highlighted ? new BABYLON.Color3.Yellow : new BABYLON.Color3.Green;
-		tex.drawText(e, 200, 300, "bold 170px Segoe UI", "black", "#555555");
-		var lines = BABYLON.Mesh.CreateLines("lines", [
-			new BABYLON.Vector3(-0.5, -0.5, 0),
-			new BABYLON.Vector3(-0.5, +0.5, 0),
-			new BABYLON.Vector3(+0.5, +0.5, 0),
-			new BABYLON.Vector3(+0.5, -0.5, 0),
-			new BABYLON.Vector3(-0.5, -0.5, 0)], scene);
-		lines.parent = this.element;
-		this.element.position.x = xpos;
-        this.element.position.y = ypos;
-	}
-	
-	Element.prototype.rotate = function (x, y, z) {
-		this.element.rotation = new BABYLON.Vector3(Math.PI * x / 180, Math.PI * y / 180, Math.PI * z / 180);
+        this.height = 1;
+        this.width = 1;
+        this.showorder = predefinedshoworder;
+        ++predefinedshoworder;
     }
     
-    Element.prototype.position = function (x, y, z){
-        this.element.position.x = x;
-        this.element.position.y = y;
-        this.element.position.z = z;
+    Element.prototype.CalculatePosition = function (){
+        globalx += this.width;
+    }
+
+    Element.prototype.Draw = function (scene) {
+        if (this.showorder <= globalshoworder) {
+            
+
+            var mat = new BABYLON.StandardMaterial("element", scene);
+            this.mesh = null;
+            if (this.shape == 'disc') {
+                this.mesh = BABYLON.Mesh.CreateDisc("element", 0.5, 40, scene, false, 2);
+                this.mesh.rotation = new BABYLON.Vector3(Math.PI, 0, 0);
+            }
+            else if (this.shape == 'square') {
+                this.mesh = BABYLON.Mesh.CreatePlane("element", 1, scene, false, 2);
+            }
+            this.mesh.material = mat;
+            var tex = new BABYLON.DynamicTexture("dynamic texture", 512, scene, true);
+            this.mesh.material.diffuseTexture = tex;
+            this.mesh.material.emissiveColor = this.highlighted ? new BABYLON.Color3.Yellow: new BABYLON.Color3.Green;
+            tex.drawText(this.value, 200, 300, "bold 170px Segoe UI", "black", "#555555");
+            var lines = BABYLON.Mesh.CreateLines("lines", [
+                new BABYLON.Vector3(-0.5, -0.5, 0),
+                new BABYLON.Vector3(-0.5, +0.5, 0),
+                new BABYLON.Vector3(+0.5, +0.5, 0),
+                new BABYLON.Vector3(+0.5, -0.5, 0),
+                new BABYLON.Vector3(-0.5, -0.5, 0)], scene);
+            lines.parent = this.mesh;
+            this.mesh.position.x = globalx;
+            this.mesh.position.y = globaly;
+            this.CalculatePosition();
+            return this.mesh;
+        }
+        return null;
     }
     
-    Element.prototype.translate = function (dx, dy, dz){
-        this.element.position.x += dx;
-        this.element.position.y += dy;
-        this.element.position.z += dz;
+    Element.prototype.rotate = function (x, y, z) {
+        this.mesh.rotation = new BABYLON.Vector3(Math.PI * x / 180, Math.PI * y / 180, Math.PI * z / 180);
     }
-	
-    List = function (eles, scene, shape, hlindex) {
-        this.mesh = null;
-        this.elements = [];
-        this.hlindex = hlindex;
-        for (var i = 0; i < eles.length; ++i) {
-            var e = new Element(eles[i], scene, shape, i, 0, i === hlindex);
-            this.elements.push(e);
-            if (i === 0) {
-                this.mesh = BABYLON.Mesh.CreateLines('anotherline', 
+    
+    Element.prototype.position = function (x, y, z) {
+        this.mesh.position.x = x;
+        this.mesh.position.y = y;
+        this.mesh.position.z = z;
+    }
+    
+    Element.prototype.translate = function (dx, dy, dz) {
+        this.mesh.position.x += dx;
+        this.mesh.position.y += dy;
+        this.mesh.position.z += dz;
+    }
+    
+    function NewLine(v){
+        this.value = v || 1;
+    }  
+    
+    NewLine.prototype.CalculatePosition = function (){
+        globaly += this.value;
+        globalx = 0;
+    }
+
+    NewLine.prototype.Draw = function (scene) {
+        this.CalculatePosition();
+    }
+    
+    function NewColumn(v){
+        this.value = v || 1;
+        globalx += this.value;
+    }
+    
+    NewColumn.prototype.Draw = function (scene){
+    }
+    
+    List = function (eles, highlighted) {
+        this.elements = eles || [];
+        this.highlighted = highlighted || false;
+    }
+    
+    List.prototype.CalculatePosition = function (){
+
+    }
+
+    List.prototype.Draw = function (scene){
+
+        this.mesh = BABYLON.Mesh.CreateLines('listline', 
                                             [new BABYLON.Vector3(-0.5, -0.5, 0), new BABYLON.Vector3(-0.5, 0.5, 0)], 
                                             scene);
+        for (var i = 0; i < this.elements.length; ++i) {
+            var e = this.elements[i].Draw(scene);
+            if (e !== null) {
+                e.parent = this.mesh;
             }
-            e.element.parent = this.mesh;
         }
-	}
-	
-    List.prototype.position = function (x, y, z){
+        this.CalculatePosition();
+        return this.mesh;
+    }
+    
+    List.prototype.position = function (x, y, z) {
         if (this.mesh !== null) {
             this.mesh.position.x = x;
             this.mesh.position.y = y;
@@ -73,173 +125,18 @@ window.addEventListener('DOMContentLoaded', function () {
         }
     }
     
-    List.prototype.translate = function (dx, dy, dz){
+    List.prototype.translate = function (dx, dy, dz) {
         if (this.mesh !== null) {
             this.mesh.translate(dx, dy, dz);
         }
     }
-
-    List.prototype.rotate = function (z){
+    
+    List.prototype.rotate = function (z) {
         for (var i = 0; i < this.elements.length; ++i) {
             this.elements[i].element.rotation = new BABYLON.Vector3(Math.PI, 0, Math.PI * z / 180);
         }
         if (this.mesh !== null) {
             this.mesh.rotation = new BABYLON.Vector3(0, 0, Math.PI * z / 180);
-        }
-    }
-    
-    function Arrow(scale, scene, xpos, ypos) {
-        this.element = BABYLON.Mesh.CreateLines('arrow', [new BABYLON.Vector3(0, 1 * scale, 0), new BABYLON.Vector3(0, 0, 0),
-                new BABYLON.Vector3(-0.375 * scale, 0.5 * scale, 0), new BABYLON.Vector3(0, 0, 0),
-                new BABYLON.Vector3(0.375 * scale, 0.5 * scale, 0), new BABYLON.Vector3(0, 0, 0)],
-                                    scene);
-        this.element.position.x = xpos;
-        this.element.position.y = ypos;
-    }
-
-	var createArray = function (elements, len, scene, shape, xpos, ypos, isvertical, dir) {
-		var arr = [];
-		for (var i = 0; i < len; ++i) {
-			var e = new Element(elements[i], scene, shape, xpos + (isvertical ? 0 : dir * i), ypos + (isvertical ? dir * i : 0));
-			arr.push(e);
-		}
-		return arr;
-	}
-	
-	var createMap = function (m, scene, xpos, ypos) {
-		var i = 0;
-		var mp = [];
-		for (var k in m) {
-			var e = new Element(k, scene, 'square', xpos + i * 1.01, ypos + 1.01);
-			var arr = createArray(m[k], m[k].length, scene, 'disc', xpos + i * 1.01, ypos, true, -1);
-			mp[k] = { element: e, array: arr };
-			++i;
-		}
-		return mp;
-	}
-	
-	var createArrow = function (scale, scene) {
-		return BABYLON.Mesh.CreateLines('arrow', [new BABYLON.Vector3(0, 1 * scale, 0), new BABYLON.Vector3(0, 0, 0),
-			new BABYLON.Vector3(-0.375 * scale, 0.5 * scale, 0), new BABYLON.Vector3(0, 0, 0),
-			new BABYLON.Vector3(0.375 * scale, 0.5 * scale, 0), new BABYLON.Vector3(0, 0, 0)],
-                                    scene);
-	}
-	
-	var createLinkedList = function (elements, scene, shape) {
-		var head = null;
-		for (var i = 0; i < elements.length; ++i) {
-			var e = new Element(elements[i], scene, shape, i * 2, 0);
-			if (head === null) {
-				head = e;
-			} else {
-				e.element.parent = head;
-			}
-			if (i != elements.length - 1) {
-				var arrow = createArrow(1, scene);
-				arrow.rotation = new BABYLON.Vector3(0, 0, Math.PI / 2);
-				arrow.position.x = 2 * i + 1 + 0.5;
-				arrow.parent = head;
-			}
-		}
-		return head;
-    }
-    
-    function VcElement(v) {
-        this.value = v;
-        this.shape = 'square';
-        this.x = globalx;
-        this.y = globaly;
-    }
-    
-    VcElement.prototype.Draw = function (scene) {
-        var e = new Element(this.value, scene, this.shape, this.x, this.y);
-        this.mesh = e.element;
-        this.mesh.position.x = this.x;
-        this.mesh.position.y = this.y;
-        return this.mesh;
-    }
-    
-    function VcArray(arr){
-        this.value = arr;
-        this.shape = 'square';
-        this.x = globalx;
-        this.y = globaly;
-        this.highlightedindex = -1;
-    }
-    
-    VcArray.prototype.Draw = function (scene){
-        var l = new List(this.value, scene, this.shape, this.highlightedindex);
-        this.mesh = l.elements.length ? l.elements[0].element : null;
-        this.mesh.position.x = this.x;
-        this.mesh.position.y = this.y;
-    }
-    
-    function NewLine(n){
-        globaly += n || 1;
-    }
-    
-    function VcArrow (scale) {
-        this.scale = scale || 1;
-        this.x = globalx;
-        this.y = globaly;
-    }
-    
-    VcArrow.prototype.Draw = function(scene) {
-        this.mesh = BABYLON.Mesh.CreateLines('arrow', [new BABYLON.Vector3(0, 1 * this.scale, 0), new BABYLON.Vector3(0, 0, 0),
-            new BABYLON.Vector3(-0.375 * this.scale, 0.5 * this.scale, 0), new BABYLON.Vector3(0, 0, 0),
-            new BABYLON.Vector3(0.375 * this.scale, 0.5 * this.scale, 0), new BABYLON.Vector3(0, 0, 0)], scene);
-        this.mesh.position.x = this.x;
-        this.mesh.position.y = this.y;
-        return this.mesh;
-    }
-
-    function VcLinkedList(elements, rotatez, shape){
-        this.value = elements;
-        this.shape = shape || 'square';
-        this.rotatez = rotatez || 0;
-        this.x = globalx;
-        this.y = globaly;
-    }
-    
-    VcLinkedList.prototype.Draw = function(scene) {
-        this.mesh = BABYLON.Mesh.CreateLines('oneline', 
-                                            [new BABYLON.Vector3(-0.5, -0.5, 0), new BABYLON.Vector3(-0.5, 0.5, 0)], 
-                                            scene);
-        var tempElements = [];
-        for (var i = 0; i < this.value.length; ++i) {
-            var e = new Element(this.value[i], scene, this.shape, 2 * i, 0);
-            e.element.rotation = new BABYLON.Vector3(0, 0, -Math.PI * this.rotatez / 180);
-            tempElements.push(e);
-        }
-        for (var i = 0; i < tempElements.length; ++i) {
-            tempElements[i].element.parent = this.mesh;
-            if (i != this.value.length - 1) {
-                var arrow = new Arrow(1, scene, 2 * i + 1, 0);
-                arrow.element.rotation = new BABYLON.Vector3(0, 0, Math.PI / 2);
-                arrow.element.position.x = 2 * i + 1 + 0.5;
-                arrow.element.parent = this.mesh;
-            }
-        }
-        this.mesh.rotation = new BABYLON.Vector3(0, 0, Math.PI * this.rotatez / 180);
-        this.mesh.position.x = this.x;
-        this.mesh.position.y = this.y;
-        return this.mesh;
-    }
-    
-    function VcMap(mp){
-        this.value = mp;
-        this.x = globalx;
-        this.y = globaly;
-    }
-    
-    VcMap.prototype.Draw = function (scene){
-        var x = 0, y = 0;
-        for (var k in this.value) {
-            var ek = new Element(k, scene, 'square', x, y);
-            var ev = new List(this.value[k], scene, 'disc');
-            ev.position(x, y - 1, 0);
-            ev.rotate(-90);
-            ++x;
         }
     }
 
@@ -257,12 +154,15 @@ window.addEventListener('DOMContentLoaded', function () {
 	var canvas = document.getElementById('renderCanvas');
 	var engine = new BABYLON.Engine(canvas, true);
     
-    //globalqueue.push(new VcElement(0));
-    //NewLine(2);
-    //globalqueue.push(new VcElement(1));
+    var l = [new Element(0), new Element(1)];
+    globalqueue.push(new List(l, false));
+    //globalqueue.push(new Element(0));
+    //globalqueue.push(new Element(1));
+    //globalqueue.push(new NewLine(2));
+    //globalqueue.push(new Element(2));
     //NewLine();
-    var vcarr = new VcArray(elements);
-    globalqueue.push(vcarr);
+    //var vcarr = new VcArray(elements);
+    //globalqueue.push(vcarr);
     //NewLine();
     //globalqueue.push(new VcLinkedList(elements, 0, 'disc'));
     //map['a'] = [3, 5, 1];
@@ -271,7 +171,9 @@ window.addEventListener('DOMContentLoaded', function () {
     //NewLine();
     //globalqueue.push(new VcMap(map));
 
-	var createScene = function (elements, map, hl) {
+    var createScene = function (elements, map, hl) {
+        globalx = 0;
+        globaly = 0;
 		var scene = new BABYLON.Scene(engine);
 		scene.clearColor = new BABYLON.Color3(0, 0, 0);
 		
@@ -282,51 +184,18 @@ window.addEventListener('DOMContentLoaded', function () {
         for (var i = 0; i < globalqueue.length; ++i) {
             globalqueue[i].Draw(scene);
         }
-       // stop = true;
-		
-        //var ele1 = new Element('1', scene, 'square', 0, 0);
-        //var list = new List(elements, scene, 'disc');
-        //list.position(1, 1, 0);
-        //list.rotate(0);
-        //list.position(2, -2, 0);
-        //list.rotate(0, 0, 45);
-        //list.translate(-2, -2, -2);
-		//var arrow = createArrow(1, scene);
-		//arrow.rotation = new BABYLON.Vector3(0, 0, -Math.PI / 2);
-		//var l = createLinkedList(elements, scene, 'square');
-		//l.element.rotate(0, 0, 45);
-		//l.rotation = new BABYLON.Vector3(0, 0, -Math.PI / 2);
-		//l.position.y = 3;
-		//var arr = createArray(elements, elements.length, scene, 'square', -3, 3, false, 1);
-		//var mp = createMap(map, scene, -3, 0);
-		//var b = 'b';
-		//if (hl >= 0 && hl < arr.length) {
-		//    arr[hl].material.specularColor = new BABYLON.Color3.Red;
-		//    var s = target - elements[hl];
-		//    if (s in mp && (elements[hl] !== s || mp[s].array.length > 1)) {
-		//        mp[s].element.material.emissiveColor = new BABYLON.Color3.White;
-		//        mp[s].array[0].material.emissiveColor = new BABYLON.Color3.Red;
-		//        if (s === elements[hl]) {
-		//            mp[s].array[1].material.emissiveColor = new BABYLON.Color3(1, 0.83, 0);
-		//        } else {
-		//            mp[elements[hl]].array[0].material.emissiveColor = new BABYLON.Color3(1, 0.83, 0);
-		//        }
-		//        stop = true;
-		//    }
-		//}
-		//createFormula(scene, target);
 		
 		return scene;
 	}
 	
 	engine.runRenderLoop(function () {
         if (!stop) {
-            if (total % 20 === 9) {
-                ++vcarr.highlightedindex;
-            } else if (total % 20 === 19) {
+            if (total % 20 === 19) {
                 var scene = createScene(elements, map, hl);
                 scene.render();
+                ++globalshoworder;
             }
+            
 		}
         total++;
         if (total === 1000) {
