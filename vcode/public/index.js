@@ -4,7 +4,7 @@
 window.addEventListener('DOMContentLoaded', function () {
     var root = {
         origin: { x: 0, y: 0, z: 0},
-        current: { x: 0, y: 0, z: 0 },
+        position: { x: 0, y: 0, z: 0 },
         shape: 'square',
         color: new BABYLON.Color3.Yellow,
         predefinedshoworder: 0, 
@@ -43,7 +43,8 @@ window.addEventListener('DOMContentLoaded', function () {
         this.highlighted = highlighted || false;
         this.dimension = { x: 1, y: 1, z: 1 };
         this.showorder = increaseshoworder !== false ? ++root.predefinedshoworder : root.predefinedshoworder;
-        this.position = { x: this.parent.current.x, y: this.parent.current.y, z: this.parent.current.z };
+        this.origin = { x: this.parent.position.x, y: this.parent.position.y, z: this.parent.position.z };
+        this.position = { x: this.parent.position.x, y: this.parent.position.y, z: this.parent.position.z };
         this.rotation = { x: 0, y: 0, z: 0 };
         this.CalculatePosition();
     }
@@ -52,19 +53,19 @@ window.addEventListener('DOMContentLoaded', function () {
         this.rotation = {x: x, y: y, z: z};
         var ori = [[this.position.x, this.position.y, this.position.z]];
         var c = rotate(ori, this.rotation.x, this.rotation.y, this.rotation.z);
-        this.position = { x: c[0][0], y: c[0][1], z: c[0][2] };
+        this.origin = { x: c[0][0], y: c[0][1], z: c[0][2] };
     }
     
     Element.prototype.locate = function (x, y, z) {
-        this.position = { x: x, y: y, z: z };
+        this.origin = { x: x, y: y, z: z };
     }
     
     Element.prototype.translate = function (x, y, z) {
-        this.position = { x: this.position.x + dx, y: this.position.y + dy, z: this.position.z + dz };
+        this.origin = { x: this.position.x + dx, y: this.position.y + dy, z: this.position.z + dz };
     }
     
     Element.prototype.CalculatePosition = function (){
-        this.parent.current.x += this.dimension.x;    
+        this.parent.position.x += this.dimension.x;    
     }
 
     Element.prototype.Draw = function (scene) {
@@ -89,36 +90,39 @@ window.addEventListener('DOMContentLoaded', function () {
                 new BABYLON.Vector3(+0.5, -0.5, 0),
                 new BABYLON.Vector3(-0.5, -0.5, 0)], scene);
             lines.parent = this.mesh;
-            this.mesh.position.x = this.position.x;
-            this.mesh.position.y = this.position.y;
-            this.mesh.position.z = this.position.z;
+            this.mesh.position.x = this.origin.x;
+            this.mesh.position.y = this.origin.y;
+            this.mesh.position.z = this.origin.z;
         }
         return this.mesh;
     }
     
-    function NewLine(v){
+    function NewLine(v, parent){
+        this.parent = parent || root;
         this.value = v || 1;
     }  
     
     NewLine.prototype.CalculatePosition = function (){
-        root.current.y += this.value;
-        root.current.x = 0;
+        this.parent.position.y += this.value;
+        this.parent.position.x = 0;
     }
 
     NewLine.prototype.Draw = function (scene) {
         this.CalculatePosition();
     }
     
-    function NewColumn(v){
+    function NewColumn(v, parent){
+        this.parent = parent || root;
         this.value = v || 1;
     }
     
     NewColumn.prototype.CalculatePosition = function (){
-        root.current.x += this.value;
-        root.current.y = 0;
+        root.position.x += this.value;
+        root.position.y = 0;
     }
     
     NewColumn.prototype.Draw = function (scene){
+        this.CalculatePosition();
     }
     
     List = function (eles, parent, onebyone, highlighted, shape) {
@@ -128,7 +132,8 @@ window.addEventListener('DOMContentLoaded', function () {
         this.highlighted = highlighted || false;
         this.showorder = ++root.predefinedshoworder;
         this.dimension = { x: 0, y: 0, z: 0 };
-        this.position = { x: this.parent.current.x, y: this.parent.current.y, z: this.parent.current.z };
+        this.origin = { x: this.parent.position.x, y: this.parent.position.y, z: this.parent.position.z };
+        this.position = { x: this.parent.position.x, y: this.parent.position.y, z: this.parent.position.z };
         var x = 0;
         for (var i = 0; i < this.elements.length; ++i, root.predefinedshoworder += onebyone === true) {
             this.elements[i].showorder = root.predefinedshoworder;
@@ -140,13 +145,13 @@ window.addEventListener('DOMContentLoaded', function () {
     }
     
     List.prototype.CalculatePosition = function (){
-        this.parent.current.x += this.dimension.x;
+        this.parent.position.x += this.dimension.x;
     }
     
     List.prototype.Add = function(e) {
-        e.position.x = this.elements.length;
+        e.origin.x = this.elements.length;
         this.dimension.width += 1;
-        this.parent.current.x += 1;
+        this.parent.position.x += 1;
         this.elements.push(e);
     }
     
@@ -155,11 +160,13 @@ window.addEventListener('DOMContentLoaded', function () {
         if (this.showorder !== null && this.showorder <= root.globalshoworder) {
             for (var i = 0; i < this.elements.length; ++i) {
                 var e = this.elements[i].Draw(scene);
-                if (this.mesh === null) {
-                    this.mesh = e;
-                }
-                else {
-                    e.parent = this.mesh;
+                if (e !== null) {
+                    if (this.mesh === null) {
+                        this.mesh = e;
+                    }
+                    else {
+                        e.parent = this.mesh;
+                    }
                 }
             }
         }
@@ -167,23 +174,23 @@ window.addEventListener('DOMContentLoaded', function () {
             if (this.shape === 'disc') {
                 this.mesh.rotation = new BABYLON.Vector3(Math.PI, 0, 0);
             }
-            this.mesh.position.x = this.position.x;
-            this.mesh.position.y = this.position.y;
-            this.mesh.position.z = this.position.z;
+            this.mesh.position.x = this.origin.x;
+            this.mesh.position.y = this.origin.y;
+            this.mesh.position.z = this.origin.z;
         }
         return this.mesh;
     }
     
     List.prototype.locate = function (x, y, z) {
-        this.position.x = x;
-        this.position.y = y;
-        this.position.z = z;
+        this.origin.x = x;
+        this.origin.y = y;
+        this.origin.z = z;
     }
     
     List.prototype.translate = function (dx, dy, dz) {
-        this.position.x += dx;
-        this.position.y += dy;
-        this.position.z += dz;
+        this.origin.x += dx;
+        this.origin.y += dy;
+        this.origin.z += dz;
     }
     
     List.prototype.rotate = function (x, y, z) {
@@ -210,18 +217,19 @@ window.addEventListener('DOMContentLoaded', function () {
 	var canvas = document.getElementById('renderCanvas');
 	var engine = new BABYLON.Engine(canvas, true);
     
-    var arr = [new Element(0), new Element(1)];
-    arr.push(new Element(2));
-    var l = new List(arr, null, false, null, 'disc');
-    l.rotate(0, 0, Math.PI / 2);
-    l.locate(-1, -1, 0);
+    var l = new List(null, null, false, null, 'disc');
+    l.Add(new Element(0, l));
+    l.Add(new Element(1, l));
+    l.Add(new Element(2, l));
+    l.rotate(0, 0, 0);
+    l.locate(3, 1, 0);
     globalqueue.push(l);
-    //var e0 = new Element(0, false);
-    //var e1 = new Element(1, false)
-    //e1.locate(2, 1, 0);
-    //e1.rotate(0, 0, 90);
-    //globalqueue.push(e0);
-    //globalqueue.push(e1);
+    var e0 = new Element(0, false);
+    var e1 = new Element(1, false)
+    e1.locate(2, 1, 0);
+    e1.rotate(0, 0, Math.PI / 2);
+    globalqueue.push(e0);
+    globalqueue.push(e1);
     //globalqueue.push(new NewLine(2));
     //globalqueue.push(new Element(2));
     //NewLine();
