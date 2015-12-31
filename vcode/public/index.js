@@ -121,38 +121,20 @@ window.addEventListener('DOMContentLoaded', function () {
         },
         SetAlignment: function (mode) {
             this.alignment = mode;
+        },
+        NextLine: function (v){
+            var nl = v || 1;
+            this.cursor.y += nl;
+            this.cursor.x = 0;
+        },
+        NextColumn: function (v){
+            var nl = v || 1;
+            this.cursor.x += nl;
+            this.cursor.y = 0;
         }
     };
-
-    function NewLine(v, parent){
-        this.parent = parent || root;
-        this.value = v || 1;
-    }  
     
-    NewLine.prototype.CalculatePosition = function (){
-        this.parent.cursor.y += this.value;
-        this.parent.cursor.x = 0;
-    }
-
-    NewLine.prototype.Draw = function (scene) {
-        this.CalculatePosition();
-    }
-    
-    function NewColumn(v, parent){
-        this.parent = parent || root;
-        this.value = v || 1;
-    }
-    
-    NewColumn.prototype.CalculatePosition = function (){
-        root.cursor.x += this.value;
-        root.cursor.y = 0;
-    }
-    
-    NewColumn.prototype.Draw = function (scene){
-        this.CalculatePosition();
-    }
-    
-    List.prototype = new Element();
+    List.prototype = new Element(); // there's a bug here. still need to declare a base class for layout/position operations. 
     List.prototype.constructor = List;
 
     function List(parent, onebyone, highlighted, shape) {
@@ -251,17 +233,18 @@ window.addEventListener('DOMContentLoaded', function () {
     //l.rotate(0, 0, 0);
     //l.locate(3, 1, 0);
     //globalqueue.push(l);
-    var e0 = new Element(0, null, false);
-    var e1 = new Element(1, null, false);
-    root.SetAlignment('vertical');
-    var e2 = new Element(2, null, false);
-    var e3 = new Element(3, null, false)
-    //e1.locate(2, 1, 0);
-    //e1.rotate(0, 0, Math.PI);
-    globalqueue.push(e0);
-    globalqueue.push(e1);
-    globalqueue.push(e2);
-    globalqueue.push(e3);
+    //var e0 = new Element(0, null, false);
+    //var e1 = new Element(1, null, false);
+    //root.NextLine();
+    //root.SetAlignment('vertical');
+    //var e2 = new Element(2, null, false);
+    //var e3 = new Element(3, null, false)
+    ////e1.locate(2, 1, 0);
+    ////e1.rotate(0, 0, Math.PI);
+    //globalqueue.push(e0);
+    //globalqueue.push(e1);
+    //globalqueue.push(e2);
+    //globalqueue.push(e3);
     
     var createScene = function (elements, map, hl) {
         globalx = 0;
