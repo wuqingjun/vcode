@@ -2,28 +2,6 @@
 
 
 window.addEventListener('DOMContentLoaded', function () {
-    var root = {
-        origin: { x: 0, y: 0, z: 0},
-        position: { x: 0, y: 0, z: 0 },
-        shape: 'square',
-        color: new BABYLON.Color3.Yellow,
-        predefinedshoworder: 0, 
-        globalshoworder: 0, 
-        globalhighlightorder: 0,
-        alignment: 'horizontal', // 'horizontal', 'vertical', 'diagonal'
-        CalculatePosition: function (dimension){
-            if (this.alignment === 'horizontal' || this.alignment === 'diagonal') {
-                this.position.x += dimension.x;
-            }
-            if (this.alignment === 'vertical' || this.alignment === 'diagonal') {
-                this.position.y += dimension.y;
-            }
-        },
-        SetAlignment: function (mode){
-            this.alignment = mode;
-        }
-    };
-
     function multiply(a, b) {
         var c = [];
         for (var i = 0; i < a.length; ++i) {
@@ -53,17 +31,18 @@ window.addEventListener('DOMContentLoaded', function () {
         this.parent = parent || root;
         this.shape = shape || this.parent.shape;
         this.highlighted = highlighted || false;
-        this.dimension = { x: 1, y: 1, z: 1 };
+        this.cursor = { x: 0, y: 0, z: 0 };
+        this.alignment = 'horizontal', // 'vertical', 'diagonal'
+        this.dimension = { x: 1, y: 1, z: 0 };
         this.showorder = increaseshoworder !== false ? ++root.predefinedshoworder : root.predefinedshoworder;
-        this.origin = { x: this.parent.position.x, y: this.parent.position.y, z: this.parent.position.z };
-        this.position = { x: this.parent.position.x, y: this.parent.position.y, z: this.parent.position.z };
+        this.origin = { x: this.parent.cursor.x, y: this.parent.cursor.y, z: this.parent.cursor.z };
         this.rotation = { x: 0, y: 0, z: 0 };
-        this.parent.CalculatePosition(this.dimension);
+        this.CalculatePosition({ x: 0, y: 0, z: 0 });
     }
     
     Element.prototype.rotate = function (x, y, z) {
         this.rotation = {x: x, y: y, z: z};
-        var ori = [[this.position.x, this.position.y, this.position.z]];
+        var ori = [[this.cursor.x, this.cursor.y, this.cursor.z]];
         var c = rotate(ori, this.rotation.x, this.rotation.y, this.rotation.z);
         this.origin = { x: c[0][0], y: c[0][1], z: c[0][2] };
     }
@@ -73,16 +52,21 @@ window.addEventListener('DOMContentLoaded', function () {
     }
     
     Element.prototype.translate = function (x, y, z) {
-        this.origin = { x: this.position.x + dx, y: this.position.y + dy, z: this.position.z + dz };
+        this.origin = { x: this.cursor.x + dx, y: this.cursor.y + dy, z: this.cursor.z + dz };
     }
     
-    Element.prototype.CalculatePosition = function (dimension){
+    Element.prototype.CalculatePosition = function (childdimension){
+        this.dimension.x = Math.max(this.cursor.x + childdimension.x, this.dimension.x);
+        this.dimension.y = Math.max(this.cursor.y + childdimension.y, this.dimension.y);
+        this.dimension.z = Math.max(this.cursor.z + childdimension.z, this.dimension.z);
         if (this.alignment === 'horizontal' || this.alignment === 'diagonal') {
-            this.position.x += dimension.x;
+            this.cursor.x = this.dimension.x + 1;
         }
         if (this.alignment === 'vertical' || this.alignment === 'diagonal') {
-            this.position.y += dimension.y;
+            this.cursor.y = this.dimension.y + 1;
         }
+        
+        this.parent.CalculatePosition(this.dimension); 
     }
 
     Element.prototype.Draw = function (scene) {
@@ -114,14 +98,40 @@ window.addEventListener('DOMContentLoaded', function () {
         return this.mesh;
     }
     
+    var root = {
+        origin: { x: 0, y: 0, z: 0 },
+        cursor: { x: 0, y: 0, z: 0 },// cursor
+        shape: 'square',
+        color: new BABYLON.Color3.Yellow,
+        predefinedshoworder: 0, 
+        globalshoworder: 0, 
+        globalhighlightorder: 0,
+        dimension: {x: 0, y: 0, z: 0},
+        alignment: 'horizontal', // 'horizontal', 'vertical', 'diagonal'
+        CalculatePosition: function (childdimension) {
+            this.dimension.x = Math.max(this.cursor.x + childdimension.x, this.dimension.x);
+            this.dimension.y = Math.max(this.cursor.y + childdimension.y, this.dimension.y);
+            this.dimension.z = Math.max(this.cursor.z + childdimension.z, this.dimension.z);
+            if (this.alignment === 'horizontal' || this.alignment === 'diagonal') {
+                this.cursor.x = this.dimension.x;
+            }
+            if (this.alignment === 'vertical' || this.alignment === 'diagonal') {
+                this.cursor.y = this.dimension.y;
+            }
+        },
+        SetAlignment: function (mode) {
+            this.alignment = mode;
+        }
+    };
+
     function NewLine(v, parent){
         this.parent = parent || root;
         this.value = v || 1;
     }  
     
     NewLine.prototype.CalculatePosition = function (){
-        this.parent.position.y += this.value;
-        this.parent.position.x = 0;
+        this.parent.cursor.y += this.value;
+        this.parent.cursor.x = 0;
     }
 
     NewLine.prototype.Draw = function (scene) {
@@ -134,15 +144,18 @@ window.addEventListener('DOMContentLoaded', function () {
     }
     
     NewColumn.prototype.CalculatePosition = function (){
-        root.position.x += this.value;
-        root.position.y = 0;
+        root.cursor.x += this.value;
+        root.cursor.y = 0;
     }
     
     NewColumn.prototype.Draw = function (scene){
         this.CalculatePosition();
     }
     
-    List = function (parent, onebyone, highlighted, shape) {
+    List.prototype = new Element();
+    List.prototype.constructor = List;
+
+    function List(parent, onebyone, highlighted, shape) {
         this.elements = [];
         this.parent = parent || root;
         this.shape = shape || this.parent.shape;
@@ -150,18 +163,18 @@ window.addEventListener('DOMContentLoaded', function () {
         this.showorder = ++root.predefinedshoworder;
         this.dimension = { x: 0, y: 0, z: 0 };
         this.alignment = 'horizontal', // 'vertical', 'diagonal'
-        this.origin = { x: this.parent.position.x, y: this.parent.position.y, z: this.parent.position.z };
-        this.position = { x: this.parent.position.x, y: this.parent.position.y, z: this.parent.position.z };
+        this.origin = { x: this.parent.cursor.x, y: this.parent.cursor.y, z: this.parent.cursor.z };
+        this.cursor = { x: this.parent.cursor.x, y: this.parent.cursor.y, z: this.parent.cursor.z };
     }
     
-    List.prototype.CalculatePosition = function (dimension){
-        if (this.alignment === 'horizontal' || this.alignment === 'diagonal') {
-            this.position.x += dimension.x;
-        }
-        if (this.alignment === 'vertical' || this.alignment === 'diagonal') {
-            this.position.y += dimension.y;
-        }
-    }
+    //List.prototype.CalculatePosition = function (dimension){
+    //    if (this.alignment === 'horizontal' || this.alignment === 'diagonal') {
+    //        this.cursor.x += dimension.x;
+    //    }
+    //    if (this.alignment === 'vertical' || this.alignment === 'diagonal') {
+    //        this.cursor.y += dimension.y;
+    //    }
+    //}
     
     List.prototype.Add = function (n) {
         var e = new Element(n, this);
@@ -209,9 +222,9 @@ window.addEventListener('DOMContentLoaded', function () {
     
     List.prototype.rotate = function (x, y, z) {
         this.rotation = { x: x, y: y, z: z};
-        var ori = [[this.position.x, this.position.y, this.position.z]];
+        var ori = [[this.cursor.x, this.cursor.y, this.cursor.z]];
         var c = rotate(ori, this.rotation.x, this.rotation.y, this.rotation.z);
-        this.position = { x: c[0][0], y: c[0][1], z: c[0][2] };
+        this.cursor = { x: c[0][0], y: c[0][1], z: c[0][2] };
         for (var i = 0; i < this.elements.length; ++i) {
             this.elements[i].rotate(x, y, z);
         }
@@ -231,35 +244,25 @@ window.addEventListener('DOMContentLoaded', function () {
 	var canvas = document.getElementById('renderCanvas');
 	var engine = new BABYLON.Engine(canvas, true);
     
-    var l = new List(null, false, null, 'disc');
-    //l.Add(new Element(0, l));
-    //l.Add(new Element(1, l));
-    //l.Add(new Element(2, l));
-    l.Add(0);
-    l.Add(1);
-    l.Add(2);
-    l.rotate(0, 0, 0);
-    l.locate(3, 1, 0);
-    globalqueue.push(l);
-    var e0 = new Element(0, false);
-    var e1 = new Element(1, false)
-    e1.locate(2, 1, 0);
-    e1.rotate(0, 0, Math.PI / 2);
+    //var l = new List(null, false, null, 'disc');
+    //l.Add(0);
+    //l.Add(1);
+    //l.Add(2);
+    //l.rotate(0, 0, 0);
+    //l.locate(3, 1, 0);
+    //globalqueue.push(l);
+    var e0 = new Element(0, null, false);
+    var e1 = new Element(1, null, false);
+    root.SetAlignment('vertical');
+    var e2 = new Element(2, null, false);
+    var e3 = new Element(3, null, false)
+    //e1.locate(2, 1, 0);
+    //e1.rotate(0, 0, Math.PI);
     globalqueue.push(e0);
     globalqueue.push(e1);
-    //globalqueue.push(new NewLine(2));
-    //globalqueue.push(new Element(2));
-    //NewLine();
-    //var vcarr = new VcArray(elements);
-    //globalqueue.push(vcarr);
-    //NewLine();
-    //globalqueue.push(new VcLinkedList(elements, 0, 'disc'));
-    //map['a'] = [3, 5, 1];
-    //map['b'] = [1, 2, 4];
-    //map['cs'] = [2, 3, 5];
-    //NewLine();
-    //globalqueue.push(new VcMap(map));
-
+    globalqueue.push(e2);
+    globalqueue.push(e3);
+    
     var createScene = function (elements, map, hl) {
         globalx = 0;
         globaly = 0;
