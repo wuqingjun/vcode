@@ -26,7 +26,7 @@ window.addEventListener('DOMContentLoaded', function () {
         return cz;
     }
 
-    function Element(v, parent, increaseshoworder, shape, highlighted) {
+    function Element(v, parent, increaseshoworder, shape, highlighted) { // passing parent as null to extend the element class.
         this.value = v;
         this.parent = parent;
         this.shape = shape || (parent !== null ? parent.shape : 'square');
@@ -139,7 +139,7 @@ window.addEventListener('DOMContentLoaded', function () {
         }
     };
     
-    List.prototype = new Element(null, null); // passing parent as null to extend the element class.
+    List.prototype = new Element(null, null);
     List.prototype.constructor = List;
 
     function List(parent, onebyone, highlighted, shape) {
@@ -194,6 +194,31 @@ window.addEventListener('DOMContentLoaded', function () {
         for (var i = 0; i < this.elements.length; ++i) {
             this.elements[i].rotate(x, y, z);
         }
+    }
+    
+    Arrow.prototype = new Element(null, null);
+    Arrow.prototype.constructor = Arrow;
+    function Arrow(parent){
+        this.parent = parent || root;
+        this.origin = { x: this.parent.cursor.x, y: this.parent.cursor.y, z: this.parent.cursor.z };//arrow tail
+        this.alignment = 'horizontal';
+        this.vertices = [[this.origin.x, this.origin.y, this.origin.z],
+                        [this.origin.x + 1, this.origin.y, this.origin.z],
+                        [this.origin.x + 0.5, this.origin.y - 0.375, this.origin.z]
+                        [this.origin.x + 0.5, this.origin.y + 0.375, this.origin.z]];
+    }
+    
+    Arrow.prototype.rotate = function (x, y, z){
+        this.vertices = rotate(this.vertices, x, y, z);
+        this.origin = { x: this.vertices[0][0], y: this.vertices[0][1], z: this.vertices[0][1] };
+    }
+    
+    Arrow.prototype.Draw = function (scene){
+        this.mesh = BABYLON.Mesh.CreateLines('arrow', [new BABYLON.Vector3(0, 1, 0), new BABYLON.Vector3(0, 0, 0),
+            new BABYLON.Vector3(-0.375, 0.5, 0), new BABYLON.Vector3(0, 0, 0),
+            new BABYLON.Vector3(0.375, 0.5, 0), new BABYLON.Vector3(0, 0, 0)],
+                                    scene);
+        return mesh;
     }
 
     var globalqueue = [];
