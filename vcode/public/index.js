@@ -147,14 +147,20 @@ window.addEventListener('DOMContentLoaded', function () {
         this.parent = parent || root;
         this.shape = shape || this.parent.shape;
         this.highlighted = highlighted || false;
-        this.showorder = ++root.predefinedshoworder;
+        this.showorder = ++parent.predefinedshoworder;
         this.dimension = { x: 0, y: 0, z: 0 };
         this.alignment = 'horizontal', // 'vertical', 'diagonal'
         this.origin = { x: this.parent.cursor.x, y: this.parent.cursor.y, z: this.parent.cursor.z };
-        this.cursor = { x: this.parent.cursor.x, y: this.parent.cursor.y, z: this.parent.cursor.z };
+        this.cursor = { x: 0, y: 0, z: 0 };
     }
     
-    List.prototype.Add = function (n) {
+    List.prototype.Add = function (n, addingarrow) {
+        var arrow = addingarrow || false;
+        if (arrow) {
+            var a = new Arrow(this);
+            a.origin.x -= 0.5;
+            this.elements.push(a);
+        }
         var e = new Element(n, this);
         this.elements.push(e);
         this.parent.CalculatePosition(this.dimension);
@@ -202,25 +208,32 @@ window.addEventListener('DOMContentLoaded', function () {
         this.parent = parent || root;
         this.origin = { x: this.parent.cursor.x, y: this.parent.cursor.y, z: this.parent.cursor.z };//arrow tail
         this.alignment = 'horizontal';
-        this.vertices = [[this.origin.x, this.origin.y, this.origin.z],
-                        [this.origin.x + 1, this.origin.y, this.origin.z],
-                        [this.origin.x + 0.5, this.origin.y - 0.375, this.origin.z]
-                        [this.origin.x + 0.5, this.origin.y + 0.375, this.origin.z]];
+        this.vertices = [new BABYLON.Vector3(0, 0, 0),
+            new BABYLON.Vector3(1, 0, 0),
+            new BABYLON.Vector3(0.5, -0.375, 0),
+            new BABYLON.Vector3(0.5, 0.375, 0)];
+        if (this.parent !== null) {
+            this.parent.CalculatePosition(this.dimension);
+        }
     }
     
     Arrow.prototype.rotate = function (x, y, z){
-        this.vertices = rotate(this.vertices, x, y, z);
-        this.origin = { x: this.vertices[0][0], y: this.vertices[0][1], z: this.vertices[0][1] };
+        for (var i = 0; i < this.vertices.length; ++i) {
+            var ori = [[this.vertices[i].x, this.vertices[i].y, this.vertices[i].z]];
+            var c = rotate(ori, x, y, z);
+            this.vertices[i] = new BABYLON.Vector3(c[0][0], c[0][1], c[0][2]);
+        }
     }
     
     Arrow.prototype.Draw = function (scene){
-        this.mesh = BABYLON.Mesh.CreateLines('arrow', [new BABYLON.Vector3(0, 1, 0), new BABYLON.Vector3(0, 0, 0),
-            new BABYLON.Vector3(-0.375, 0.5, 0), new BABYLON.Vector3(0, 0, 0),
-            new BABYLON.Vector3(0.375, 0.5, 0), new BABYLON.Vector3(0, 0, 0)],
-                                    scene);
-        return mesh;
+        this.mesh = BABYLON.Mesh.CreateLines('arrow', 
+            [this.vertices[0], this.vertices[1], this.vertices[2], this.vertices[1], this.vertices[3], this.vertices[1]], scene);
+        this.mesh.position.x = this.origin.x;
+        this.mesh.position.y = this.origin.y;
+        this.mesh.position.z = this.origin.z;
+        return this.mesh;
     }
-
+    
     var globalqueue = [];
 	var total = 0;
 	var count = 0;
@@ -235,26 +248,45 @@ window.addEventListener('DOMContentLoaded', function () {
 	var canvas = document.getElementById('renderCanvas');
 	var engine = new BABYLON.Engine(canvas, true);
     
-    var l = new List(root, false, null, 'disc');
-    l.Add(0);
-    l.Add(1);
-    l.Add(2);
-    l.rotate(0, 0, -Math.PI / 2);
-    l.locate(-3, 1, 0);
-    globalqueue.push(l);
-    var e0 = new Element(3, root, false);
-    var e1 = new Element(4, root, false);
-    root.NextLine();
-    root.SetAlignment('vertical');
-    var e2 = new Element(5, root, false);
-    var e3 = new Element(6, root, false)
-    e1.locate(2, 1, 0);
-    e1.rotate(0, 0, -Math.PI);
-    globalqueue.push(e0);
-    globalqueue.push(e1);
-    globalqueue.push(e2);
-    globalqueue.push(e3);
+    function testElement(){
+        var e0 = new Element(3, root, false);
+        var e1 = new Element(4, root, false);
+        root.NextLine();
+        root.SetAlignment('vertical');
+        var e2 = new Element(5, root, false);
+        var e3 = new Element(6, root, false)
+        e1.locate(2, 1, 0);
+        e1.rotate(0, 0, -Math.PI);
+        globalqueue.push(e0);
+        globalqueue.push(e1);
+        globalqueue.push(e2);
+        globalqueue.push(e3);
+    }
     
+    function testList(){
+        var l = new List(root, false, null, 'disc');
+        l.Add(0, true);
+        l.Add(1, true);
+        l.Add(2, true);
+        //l.rotate(0, 0, -Math.PI / 2);
+        //l.locate(-3, 1, 0);
+        globalqueue.push(l);
+    }
+    
+    function testArrow(){
+        var a = new Arrow();
+        a.origin.x -= 0.5;
+        globalqueue.push(a);
+
+        var b = new Arrow();
+        b.locate(2, 1, 0);
+        b.rotate(0, 0, Math.PI / 2);
+        globalqueue.push(b);
+    }
+    
+    //testArrow();
+    testList();
+
     var createScene = function (elements, map, hl) {
         globalx = 0;
         globaly = 0;
