@@ -80,6 +80,7 @@ window.addEventListener('DOMContentLoaded', function () {
             var mat = new BABYLON.StandardMaterial("element", scene);
             if (this.shape == 'disc') {
                 this.mesh = BABYLON.Mesh.CreateDisc("element", 0.5, 40, scene, false, 2);
+                this.mesh.rotation = new BABYLON.Vector3(Math.PI, 0, 0);
             }
             else if (this.shape == 'square') {
                 this.mesh = BABYLON.Mesh.CreatePlane("element", 1, scene, false, 2);
@@ -142,21 +143,25 @@ window.addEventListener('DOMContentLoaded', function () {
     List.prototype = new Element(null, null);
     List.prototype.constructor = List;
 
-    function List(parent, onebyone, highlighted, shape) {
+    function List(parent, onebyone, highlighted, shape, islinkedlist) {
         this.elements = [];
-        this.parent = parent || root;
-        this.shape = shape || this.parent.shape;
+        this.parent = parent;
+        this.shape = shape || (this.parent !== null ? this.parent.shape : 'square');
         this.highlighted = highlighted || false;
-        this.showorder = ++parent.predefinedshoworder;
+        this.islinkedlist = islinkedlist || false;
+        this.showorder =  parent !== null ? ++parent.predefinedshoworder : 0;
         this.dimension = { x: 0, y: 0, z: 0 };
         this.alignment = 'horizontal', // 'vertical', 'diagonal'
-        this.origin = { x: this.parent.cursor.x, y: this.parent.cursor.y, z: this.parent.cursor.z };
+        this.origin = {
+            x: this.parent !== null ? this.parent.cursor.x : 0, 
+            y: this.parent !== null ? this.parent.cursor.y : 0, 
+            z: this.parent !== null ? this.parent.cursor.z : 0
+        };
         this.cursor = { x: 0, y: 0, z: 0 };
     }
     
-    List.prototype.Add = function (n, addingarrow) {
-        var arrow = addingarrow || false;
-        if (arrow) {
+    List.prototype.Add = function (n) {
+        if (this.islinkedlist && this.elements.length > 0) {
             var a = new Arrow(this);
             a.origin.x -= 0.5;
             this.elements.push(a);
@@ -177,14 +182,15 @@ window.addEventListener('DOMContentLoaded', function () {
                     }
                     else {
                         e.parent = this.mesh;
+                        //shape disc is special. Single elemnt needs be roated around x-axis for PI. 
+                        //But in the list, the first element will be rotated like a single element, 
+                        // since the other elements in the list are children of the first one, they don't need self rotated in the Element.Draw(scene).
+                        e.rotation = new BABYLON.Vector3(0, 0, 0); 
                     }
                 }
             }
         }
         if (this.mesh !== null) {
-            if (this.shape === 'disc') {
-                this.mesh.rotation = new BABYLON.Vector3(Math.PI, 0, 0);
-            }
             this.mesh.position.x = this.origin.x;
             this.mesh.position.y = this.origin.y;
             this.mesh.position.z = this.origin.z;
@@ -201,7 +207,7 @@ window.addEventListener('DOMContentLoaded', function () {
             this.elements[i].rotate(x, y, z);
         }
     }
-    
+
     Arrow.prototype = new Element(null, null);
     Arrow.prototype.constructor = Arrow;
     function Arrow(parent){
@@ -218,9 +224,14 @@ window.addEventListener('DOMContentLoaded', function () {
     }
     
     Arrow.prototype.rotate = function (x, y, z){
+        this.rotation = { x: x, y: y, z: z };
+        var ori = [[this.origin.x, this.origin.y, this.origin.z]];
+        var c = rotate(ori, this.rotation.x, this.rotation.y, this.rotation.z);
+        this.origin = { x: c[0][0], y: c[0][1], z: c[0][2] };
+        
         for (var i = 0; i < this.vertices.length; ++i) {
-            var ori = [[this.vertices[i].x, this.vertices[i].y, this.vertices[i].z]];
-            var c = rotate(ori, x, y, z);
+            ori = [[this.vertices[i].x, this.vertices[i].y, this.vertices[i].z]];
+            c = rotate(ori, x, y, z);
             this.vertices[i] = new BABYLON.Vector3(c[0][0], c[0][1], c[0][2]);
         }
     }
@@ -249,14 +260,15 @@ window.addEventListener('DOMContentLoaded', function () {
 	var engine = new BABYLON.Engine(canvas, true);
     
     function testElement(){
-        var e0 = new Element(3, root, false);
-        var e1 = new Element(4, root, false);
+        var shape = 'disc';
+        var e0 = new Element(3, root, false, shape);
+        var e1 = new Element(4, root, false, shape);
         root.NextLine();
         root.SetAlignment('vertical');
-        var e2 = new Element(5, root, false);
-        var e3 = new Element(6, root, false)
-        e1.locate(2, 1, 0);
-        e1.rotate(0, 0, -Math.PI);
+        var e2 = new Element(5, root, false, shape);
+        var e3 = new Element(6, root, false, shape)
+        //e1.locate(2, 1, 0);
+        //e1.rotate(0, 0, -Math.PI);
         globalqueue.push(e0);
         globalqueue.push(e1);
         globalqueue.push(e2);
@@ -264,12 +276,13 @@ window.addEventListener('DOMContentLoaded', function () {
     }
     
     function testList(){
-        var l = new List(root, false, null, 'disc');
-        l.Add(0, true);
-        l.Add(1, true);
-        l.Add(2, true);
-        //l.rotate(0, 0, -Math.PI / 2);
-        //l.locate(-3, 1, 0);
+        var l = new List(root, false, null, 'square', true);
+        l.Add(7);
+        l.Add(8);
+        l.Add(5);
+        l.locate(2, 0, 0);
+        l.rotate(0, 0, -Math.PI / 2);
+        l.locate(0, 3, 0);
         globalqueue.push(l);
     }
     
@@ -284,6 +297,7 @@ window.addEventListener('DOMContentLoaded', function () {
         globalqueue.push(b);
     }
     
+    //testElement();
     //testArrow();
     testList();
 
