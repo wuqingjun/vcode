@@ -26,14 +26,15 @@ window.addEventListener('DOMContentLoaded', function () {
         return cz;
     }
 
-    function Element(v, parent, increaseshoworder, shape, highlighted) { // passing parent as null to extend the element class.
+    function Element(v, parent, increaseshoworder, shape, highlighted, scale) { // passing parent as null to extend the element class.
         this.value = v;
         this.parent = parent;
         this.shape = shape || (parent !== null ? parent.shape : 'square');
         this.highlighted = highlighted || false;
         this.cursor = { x: 0, y: 0, z: 0 };
+        this.scale = scale || (parent !== null ? parent.scale: 1.0);
         this.alignment = 'horizontal', // 'vertical', 'diagonal'
-        this.dimension = { x: 1, y: 1, z: 0 };
+        this.dimension = { x: this.scale, y: this.scale, z: 0 };
         this.showorder = increaseshoworder !== false ? ++root.predefinedshoworder : root.predefinedshoworder;
         this.origin = {
             x: this.parent === null ? 0 : this.parent.cursor.x, 
@@ -79,11 +80,11 @@ window.addEventListener('DOMContentLoaded', function () {
         if (this.showorder !== null && this.showorder <= root.globalshoworder) {
             var mat = new BABYLON.StandardMaterial("element", scene);
             if (this.shape == 'disc') {
-                this.mesh = BABYLON.Mesh.CreateDisc("element", 0.5, 40, scene, false, 2);
+                this.mesh = BABYLON.Mesh.CreateDisc("element", 0.5 * this.scale, 40, scene, false, 2);
                 this.mesh.rotation = new BABYLON.Vector3(Math.PI, 0, 0);
             }
             else if (this.shape == 'square') {
-                this.mesh = BABYLON.Mesh.CreatePlane("element", 1, scene, false, 2);
+                this.mesh = BABYLON.Mesh.CreatePlane("element", this.scale, scene, false, 2);
             }
             this.mesh.material = mat;
             var tex = new BABYLON.DynamicTexture("dynamic texture", 512, scene, true);
@@ -91,11 +92,11 @@ window.addEventListener('DOMContentLoaded', function () {
             this.mesh.material.emissiveColor = this.highlighted ? new BABYLON.Color3.Yellow: new BABYLON.Color3.Green;
             tex.drawText(this.value, 200, 300, "bold 170px Segoe UI", "black", "#555555");
             var lines = BABYLON.Mesh.CreateLines("lines", [
-                new BABYLON.Vector3(-0.5, -0.5, 0),
-                new BABYLON.Vector3(-0.5, +0.5, 0),
-                new BABYLON.Vector3(+0.5, +0.5, 0),
-                new BABYLON.Vector3(+0.5, -0.5, 0),
-                new BABYLON.Vector3(-0.5, -0.5, 0)], scene);
+                new BABYLON.Vector3(-0.5 * this.scale, -0.5 * this.scale, 0),
+                new BABYLON.Vector3(-0.5 * this.scale, 0.5 * this.scale, 0),
+                new BABYLON.Vector3(0.5 * this.scale, 0.5 * this.scale, 0),
+                new BABYLON.Vector3(0.5 * this.scale, -0.5 * this.scale, 0),
+                new BABYLON.Vector3(-0.5 * this.scale, -0.5 * this.scale, 0)], scene);
             lines.parent = this.mesh;
             this.mesh.position.x = this.origin.x;
             this.mesh.position.y = this.origin.y;
@@ -112,6 +113,7 @@ window.addEventListener('DOMContentLoaded', function () {
         predefinedshoworder: 0, 
         globalshoworder: 0, 
         globalhighlightorder: 0,
+        scale: 1.0,
         dimension: {x: 0, y: 0, z: 0},
         alignment: 'horizontal', // 'horizontal', 'vertical', 'diagonal'
         CalculatePosition: function (childdimension) {
@@ -130,12 +132,12 @@ window.addEventListener('DOMContentLoaded', function () {
         },
         NextLine: function (v){
             var nl = v || 1;
-            this.cursor.y += nl;
+            this.cursor.y += nl * this.scale;
             this.cursor.x = 0;
         },
         NextColumn: function (v){
             var nl = v || 1;
-            this.cursor.x += nl;
+            this.cursor.x += nl * this.scale;
             this.cursor.y = 0;
         }
     };
@@ -143,10 +145,11 @@ window.addEventListener('DOMContentLoaded', function () {
     List.prototype = new Element(null, null);
     List.prototype.constructor = List;
 
-    function List(parent, onebyone, highlighted, shape, islinkedlist) {
+    function List(parent, onebyone, highlighted, shape, islinkedlist, scale) {
         this.elements = [];
         this.parent = parent;
         this.shape = shape || (this.parent !== null ? this.parent.shape : 'square');
+        this.scale = scale || (parent !== null ? parent.scale : 1.0);
         this.highlighted = highlighted || false;
         this.islinkedlist = islinkedlist || false;
         this.showorder =  parent !== null ? ++parent.predefinedshoworder : 0;
@@ -163,10 +166,10 @@ window.addEventListener('DOMContentLoaded', function () {
     List.prototype.Add = function (n) {
         if (this.islinkedlist && this.elements.length > 0) {
             var a = new Arrow(this);
-            a.origin.x -= 0.5;
+            a.origin.x -= 0.5 * this.scale;
             this.elements.push(a);
         }
-        var e = new Element(n, this);
+        var e = new Element(n, this, false, this.shape, false, this.scale);
         this.elements.push(e);
         this.parent.CalculatePosition(this.dimension);
     }
@@ -199,7 +202,10 @@ window.addEventListener('DOMContentLoaded', function () {
     }
     
     List.prototype.rotate = function (x, y, z) {
-        this.rotation = { x: x, y: y, z: z};
+        if (this.shape === 'disc') {
+            y = -y; z = -z;
+        }
+        this.rotation = { x: x, y: y, z: z };
         var ori = [[this.origin.x, this.origin.y, this.origin.z]];
         var c = rotate(ori, this.rotation.x, this.rotation.y, this.rotation.z);
         this.origin = { x: c[0][0], y: c[0][1], z: c[0][2] };
@@ -210,14 +216,16 @@ window.addEventListener('DOMContentLoaded', function () {
 
     Arrow.prototype = new Element(null, null);
     Arrow.prototype.constructor = Arrow;
-    function Arrow(parent){
+    function Arrow(parent, scale){
         this.parent = parent || root;
+        this.scale = scale || (parent !== null ? parent.scale : 1.0);
         this.origin = { x: this.parent.cursor.x, y: this.parent.cursor.y, z: this.parent.cursor.z };//arrow tail
         this.alignment = 'horizontal';
+        this.dimension = { x: this.scale, y: this.scale, z: this.scale };
         this.vertices = [new BABYLON.Vector3(0, 0, 0),
-            new BABYLON.Vector3(1, 0, 0),
-            new BABYLON.Vector3(0.5, -0.375, 0),
-            new BABYLON.Vector3(0.5, 0.375, 0)];
+            new BABYLON.Vector3(this.scale, 0, 0),
+            new BABYLON.Vector3(0.5 * this.scale, -0.375 * this.scale, 0),
+            new BABYLON.Vector3(0.5 * this.scale, 0.375 * this.scale, 0)];
         if (this.parent !== null) {
             this.parent.CalculatePosition(this.dimension);
         }
@@ -261,14 +269,15 @@ window.addEventListener('DOMContentLoaded', function () {
     
     function testElement(){
         var shape = 'disc';
+        root.scale = 0.8;
         var e0 = new Element(3, root, false, shape);
         var e1 = new Element(4, root, false, shape);
         root.NextLine();
         root.SetAlignment('vertical');
         var e2 = new Element(5, root, false, shape);
-        var e3 = new Element(6, root, false, shape)
-        //e1.locate(2, 1, 0);
-        //e1.rotate(0, 0, -Math.PI);
+        var e3 = new Element(6, root, false, shape);
+        e1.locate(2, 1, 0);
+        e1.rotate(0, 0, -Math.PI);
         globalqueue.push(e0);
         globalqueue.push(e1);
         globalqueue.push(e2);
@@ -276,13 +285,12 @@ window.addEventListener('DOMContentLoaded', function () {
     }
     
     function testList(){
-        var l = new List(root, false, null, 'square', true);
+        var shape = 'square';
+        var l = new List(root, false, null, shape, true, 0.5);
         l.Add(7);
         l.Add(8);
         l.Add(5);
-        l.locate(2, 0, 0);
         l.rotate(0, 0, -Math.PI / 2);
-        l.locate(0, 3, 0);
         globalqueue.push(l);
     }
     
