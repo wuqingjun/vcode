@@ -174,6 +174,19 @@ window.addEventListener('DOMContentLoaded', function () {
         this.parent.CalculatePosition(this.dimension);
     }
     
+    List.prototype.AddRange = function (arr){
+        for (var i = 0; i < arr.length; ++i) {
+            this.Add(arr[i]);
+        }
+    }
+    
+    List.prototype.At = function (i){
+        if (this.elements.length > 0) {
+            return this.elements[this.islinkedlist ? 2 * i : i];
+        }
+        return null;
+    }
+
     List.prototype.Draw = function (scene){
         this.mesh = null;
         if (this.showorder !== null && this.showorder <= root.globalshoworder) {
@@ -253,6 +266,8 @@ window.addEventListener('DOMContentLoaded', function () {
         return this.mesh;
     }
     
+    
+
     var globalqueue = [];
 	var total = 0;
 	var count = 0;
@@ -290,10 +305,13 @@ window.addEventListener('DOMContentLoaded', function () {
         l.Add(7);
         l.Add(8);
         l.Add(5);
-        l.rotate(0, 0, -Math.PI / 2);
+        l.AddRange([3, 6, 9]);
+        //l.rotate(0, 0, -Math.PI / 2);
         globalqueue.push(l);
     }
     
+    
+
     function testArrow(){
         var a = new Arrow();
         a.origin.x -= 0.5;
@@ -333,7 +351,6 @@ window.addEventListener('DOMContentLoaded', function () {
                 scene.render();
                 ++root.globalshoworder;
             }
-            
 		}
         total++;
         if (total === 1000) {
