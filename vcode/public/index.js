@@ -277,15 +277,39 @@ window.addEventListener('DOMContentLoaded', function () {
     Map.prototype = new Element(null, null);
     Map.prototype.constructor = Map;
     Map = function (parent){
-        this.rawelements = [];
-        this.alignment = 'horizontal';
+        this.parent = parent;
+        this.keys = new List(parent, false, false, 'square', false, this.parent !== null ? this.parent.scale : 1.0);
+        this.values = [];
+        this.alignment = 'horizontal'; //keys alignment.if keys are horizontal aligned, values will be vertically aligned.
+        this.scale = this.parent !== null ? this.parent.scale : 1;
+        this.origin = {
+            x: this.parent !== null ? this.parent.cursor.x : 0, 
+            y: this.parent !== null ? this.parent.cursor.y : 0, 
+            z: this.parent !== null ? this.parent.cursor.z : 0
+        };
+        this.cursor = { x: 0, y: 0, z: 0 };
     }
     
-    Map.prototype.Add = function (k, v){
-        if (! (k in this.elements) ) {
-            this.rawelements[k] = new Element(k, this);
+    Map.prototype.Add = function (k, v) {
+        var i = this.FindIndex(k);
+        if (i < 0) {
+            this.keys.Add(k);
+            this.NextLine();// to be implemented.
+            var list = new List(this, false, false, 'disc', false, this.scale);
+            list.alignment = 'vertical';
+            this.values.push(list);
+            i = this.keys.length - 1;
         }
-
+        this.values[i].Add(v);
+    }
+    
+    Map.prototype.FindIndex = function(k) {
+        for (var i = 0; i < this.elements.length; ++i) {
+            if (this.elements[i].value === k) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     var globalqueue = [];
