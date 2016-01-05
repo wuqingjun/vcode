@@ -26,11 +26,12 @@ window.addEventListener('DOMContentLoaded', function () {
         return cz;
     }
 
-    function Element(v, parent, increaseshoworder, shape, highlighted, scale) { // passing parent as null to extend the element class.
+    function Element(v, parent, increaseshoworder, shape, scale) { // passing parent as null to extend the element class.
         this.value = v;
         this.parent = parent;
         this.shape = shape || (parent !== null ? parent.shape : 'square');
-        this.highlighted = highlighted || false;
+        this.highlightorder = [];
+        this.hlindex = 0;
         this.cursor = { x: 0, y: 0, z: 0 };
         this.scale = scale || (parent !== null ? parent.scale: 1.0);
         this.alignment = 'horizontal', // 'vertical', 'diagonal'
@@ -89,7 +90,12 @@ window.addEventListener('DOMContentLoaded', function () {
             this.mesh.material = mat;
             var tex = new BABYLON.DynamicTexture("dynamic texture", 512, scene, true);
             this.mesh.material.diffuseTexture = tex;
-            this.mesh.material.emissiveColor = this.highlighted ? new BABYLON.Color3.Yellow: new BABYLON.Color3.Green;
+            var hl = false;
+            if (!hl && this.hlindex < this.highlightorder.length && root.globalshoworder === this.highlightorder[this.hlindex]) {
+                hl = true;
+                ++this.hlindex;
+            }
+            this.mesh.material.emissiveColor = hl ? new BABYLON.Color3.Yellow: new BABYLON.Color3.Green;
             tex.drawText(this.value, 200, 300, "bold 170px Segoe UI", "black", "#555555");
             var lines = BABYLON.Mesh.CreateLines("lines", [
                 new BABYLON.Vector3(-0.5 * this.scale, -0.5 * this.scale, 0),
@@ -169,7 +175,7 @@ window.addEventListener('DOMContentLoaded', function () {
             a.origin.x -= 0.5 * this.scale;
             this.elements.push(a);
         }
-        var e = new Element(n, this, false, this.shape, false, this.scale);
+        var e = new Element(n, this, false, this.shape, this.scale);
         this.elements.push(e);
         this.parent.CalculatePosition(this.dimension);
     }
@@ -182,7 +188,9 @@ window.addEventListener('DOMContentLoaded', function () {
     
     List.prototype.At = function (i){
         if (this.elements.length > 0) {
-            return this.elements[this.islinkedlist ? 2 * i : i];
+            var index = this.islinkedlist ? 2 * i : i;
+            this.elements[index].highlightorder.push(++this.parent.predefinedshoworder);
+            return this.elements[index];
         }
         return null;
     }
@@ -266,7 +274,19 @@ window.addEventListener('DOMContentLoaded', function () {
         return this.mesh;
     }
     
+    Map.prototype = new Element(null, null);
+    Map.prototype.constructor = Map;
+    Map = function (parent){
+        this.rawelements = [];
+        this.alignment = 'horizontal';
+    }
     
+    Map.prototype.Add = function (k, v){
+        if (! (k in this.elements) ) {
+            this.rawelements[k] = new Element(k, this);
+        }
+
+    }
 
     var globalqueue = [];
 	var total = 0;
@@ -305,12 +325,32 @@ window.addEventListener('DOMContentLoaded', function () {
         l.Add(7);
         l.Add(8);
         l.Add(5);
-        l.AddRange([3, 6, 9]);
+        l.AddRange([3, 6, 9, 10]);
         //l.rotate(0, 0, -Math.PI / 2);
         globalqueue.push(l);
     }
     
-    
+    function testBinarySearch()    {
+        var shape = 'square';
+        var list = new List(root, false, null, shape, false, 0.5);
+        list.AddRange([2, 5, 6, 6, 7, 8, 9]);
+        var target = 8;
+        var l = 0, h = list.elements.length - 1, m = 0, result = -1;
+        while (l <= h) {
+            m = (l + h) / 2;
+            if (list.At(m).value === target) {
+                result = m;
+                break;
+            }
+            else if (list.At(m).value < target) {
+                l = m + 1;
+            }
+            else {
+                h = m - 1;
+            }
+        }
+        globalqueue.push(list);
+    }
 
     function testArrow(){
         var a = new Arrow();
@@ -325,7 +365,8 @@ window.addEventListener('DOMContentLoaded', function () {
     
     //testElement();
     //testArrow();
-    testList();
+    //testList();
+    testBinarySearch();
 
     var createScene = function (elements, map, hl) {
         globalx = 0;
@@ -345,7 +386,7 @@ window.addEventListener('DOMContentLoaded', function () {
 	}
 	
 	engine.runRenderLoop(function () {
-        if (!stop) {
+        if (root.globalshoworder  <= root.predefinedshoworder) {
             if (total % 20 === 19) {
                 var scene = createScene(elements, map, hl);
                 scene.render();
