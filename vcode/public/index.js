@@ -75,6 +75,23 @@ window.addEventListener('DOMContentLoaded', function () {
             this.parent.CalculatePosition(this.dimension); 
         }
     }
+    
+    Element.prototype.SetAlignment = function (mode) {
+        this.alignment = mode;
+    }
+    
+    Element.prototype.NextLine = function (v) {
+        var nl = v || 1;
+        this.cursor.y += nl * this.scale;
+        this.cursor.x = 0;
+    }
+    
+    Element.prototype.NextColumn = function (v) {
+        var nl = v || 1;
+        this.cursor.x += nl * this.scale;
+        this.cursor.y = 0;
+    }
+
 
     Element.prototype.Draw = function (scene) {
         this.mesh = null;
@@ -169,6 +186,10 @@ window.addEventListener('DOMContentLoaded', function () {
         this.cursor = { x: 0, y: 0, z: 0 };
     }
     
+    List.prototype.Length = function (){
+        return this.elements.length;
+    }
+    
     List.prototype.Add = function (n) {
         if (this.islinkedlist && this.elements.length > 0) {
             var a = new Arrow(this);
@@ -197,7 +218,8 @@ window.addEventListener('DOMContentLoaded', function () {
 
     List.prototype.Draw = function (scene){
         this.mesh = null;
-        if (this.showorder !== null && this.showorder <= root.globalshoworder) {
+        //if (this.showorder !== null && this.showorder <= root.globalshoworder)
+         {
             for (var i = 0; i < this.elements.length; ++i) {
                 var e = this.elements[i].Draw(scene);
                 if (e !== null) {
@@ -233,13 +255,16 @@ window.addEventListener('DOMContentLoaded', function () {
         for (var i = 0; i < this.elements.length; ++i) {
             this.elements[i].rotate(x, y, z);
         }
+        ori = [[this.cursor.x, this.cursor.y, this.cursor.z]];
+        c = rotate(ori, this.rotation.x, this.rotation.y, this.rotation.z);
+        this.cursor = { x: c[0][0], y: c[0][1], z: c[0][2] };
     }
 
     Arrow.prototype = new Element(null, null);
     Arrow.prototype.constructor = Arrow;
     function Arrow(parent, scale){
         this.parent = parent || root;
-        this.scale = scale || (parent !== null ? parent.scale : 1.0);
+        this.scale = scale || (this.parent !== null ? this.parent.scale : 1.0);
         this.origin = { x: this.parent.cursor.x, y: this.parent.cursor.y, z: this.parent.cursor.z };//arrow tail
         this.alignment = 'horizontal';
         this.dimension = { x: this.scale, y: this.scale, z: this.scale };
@@ -276,10 +301,11 @@ window.addEventListener('DOMContentLoaded', function () {
     
     Map.prototype = new Element(null, null);
     Map.prototype.constructor = Map;
-    Map = function (parent){
+    function Map(parent){
         this.parent = parent;
-        this.keys = new List(parent, false, false, 'square', false, this.parent !== null ? this.parent.scale : 1.0);
-        this.values = [];
+//        this.keys = new List(parent, false, false, 'square', false, this.parent !== null ? this.parent.scale : 1.0);
+        //        this.values = [];
+        this.lists = [];
         this.alignment = 'horizontal'; //keys alignment.if keys are horizontal aligned, values will be vertically aligned.
         this.scale = this.parent !== null ? this.parent.scale : 1;
         this.origin = {
@@ -293,24 +319,61 @@ window.addEventListener('DOMContentLoaded', function () {
     Map.prototype.Add = function (k, v) {
         var i = this.FindIndex(k);
         if (i < 0) {
-            this.keys.Add(k);
-            this.NextLine();// to be implemented.
+            //this.keys.Add(k);
+            //this.NextLine();
+            //if (this.keys.Length() > 1) {
+            //    this.NextColumn();
+            //}
+            this.cursor.y = 0;
+            if (this.lists.length > 1) {
+               // this.NextColumn();
+            }
             var list = new List(this, false, false, 'disc', false, this.scale);
             list.alignment = 'vertical';
-            this.values.push(list);
-            i = this.keys.length - 1;
+            this.lists.push(list);
+            i = this.lists.length - 1;
+            this.lists[i].Add(k);
         }
-        this.values[i].Add(v);
+        this.lists[i].Add(v);
     }
     
-    Map.prototype.FindIndex = function(k) {
-        for (var i = 0; i < this.elements.length; ++i) {
-            if (this.elements[i].value === k) {
+    Map.prototype.FindIndex = function (k) {
+        for (var i = 0; i < this.lists.length; ++i) {
+            if (this.lists[i].At(0).value === k) {
                 return i;
             }
         }
         return -1;
+        //for (var i = 0; i < this.keys.Length(); ++i) {
+        //    if (this.keys.At(i).value === k) {
+        //        return i;
+        //    }
+        //}
+        //return -1;
     }
+    
+    Map.prototype.Draw = function (scene) {
+        this.mesh = null;
+        if (this.showorder !== null && this.showorder <= root.globalshoworder) {
+            for (var i = 0; i < this.lists.length; ++i) {
+                var e = this.lists[i].Draw(scene);
+                if (e !== null) {
+                    if (this.mesh === null) {
+                        this.mesh = e;
+                    }
+                    else {
+                        e.parent = this.mesh;
+                    }
+                }
+            }
+        }
+        if (this.mesh !== null) {
+            this.mesh.position.x = this.origin.x;
+            this.mesh.position.y = this.origin.y;
+            this.mesh.position.z = this.origin.z;
+        }
+        return this.mesh;
+    }    
 
     var globalqueue = [];
 	var total = 0;
@@ -350,8 +413,16 @@ window.addEventListener('DOMContentLoaded', function () {
         l.Add(8);
         l.Add(5);
         l.AddRange([3, 6, 9, 10]);
-        //l.rotate(0, 0, -Math.PI / 2);
+        l.rotate(0, 0, -Math.PI / 2);
         globalqueue.push(l);
+        //root.NextLine();
+        root.cursor.x = 1;
+        root.cursor.y = 0;
+        var l2 = new List(root, false, null, shape, true, 0.5);
+        //l2.alignment = 'vertical';
+        l2.AddRange([2, 1, 3, 6, 8, 4]);
+        l2.rotate(0, 0, -Math.PI / 2);
+        globalqueue.push(l2);
     }
     
     function testBinarySearch()    {
@@ -387,10 +458,19 @@ window.addEventListener('DOMContentLoaded', function () {
         globalqueue.push(b);
     }
     
+    function testMap(){
+        var map = new Map(root);
+        globalqueue.push(map);
+        map.Add(1, 4);
+        map.Add(3, 0);
+        // map.Add(1, 2);
+    }
+    
     //testElement();
     //testArrow();
-    //testList();
-    testBinarySearch();
+    testList();
+    //testBinarySearch();
+    //testMap();
 
     var createScene = function (elements, map, hl) {
         globalx = 0;
