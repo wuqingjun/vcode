@@ -57,8 +57,10 @@ window.addEventListener('DOMContentLoaded', function () {
         this.origin = { x: x, y: y, z: z };
     }
     
-    Element.prototype.translate = function (x, y, z) {
-        this.origin = { x: this.cursor.x + dx, y: this.cursor.y + dy, z: this.cursor.z + dz };
+    Element.prototype.translate = function (dx, dy, dz) {
+        this.origin.x += dx;
+        this.origin.y += dy;
+        this.origin.z += dz;
     }
     
     Element.prototype.CalculatePosition = function (childdimension){
@@ -198,7 +200,7 @@ window.addEventListener('DOMContentLoaded', function () {
         }
         var e = new Element(n, this, false, this.shape, this.scale);
         this.elements.push(e);
-        this.parent.CalculatePosition(this.dimension);
+        //this.parent.CalculatePosition(this.dimension);
     }
     
     List.prototype.AddRange = function (arr){
@@ -215,33 +217,39 @@ window.addEventListener('DOMContentLoaded', function () {
         }
         return null;
     }
+    
+    List.prototype.translate = function (dx, dy, dz){
+        for (var i = 0; i < this.elements.length; ++i) {
+            this.elements[i].translate(dx, dy, dz);
+        }
+    }
 
     List.prototype.Draw = function (scene){
-        this.mesh = null;
+    //    this.mesh = null;
         //if (this.showorder !== null && this.showorder <= root.globalshoworder)
          {
             for (var i = 0; i < this.elements.length; ++i) {
                 var e = this.elements[i].Draw(scene);
                 if (e !== null) {
                     if (this.mesh === null) {
-                        this.mesh = e;
+       //                 this.mesh = e;
                     }
                     else {
-                        e.parent = this.mesh;
+         //               e.parent = this.mesh;
                         //shape disc is special. Single elemnt needs be roated around x-axis for PI. 
                         //But in the list, the first element will be rotated like a single element, 
                         // since the other elements in the list are children of the first one, they don't need self rotated in the Element.Draw(scene).
-                        e.rotation = new BABYLON.Vector3(0, 0, 0); 
+           //             e.rotation = new BABYLON.Vector3(0, 0, 0); 
                     }
                 }
             }
         }
-        if (this.mesh !== null) {
-            this.mesh.position.x = this.origin.x;
-            this.mesh.position.y = this.origin.y;
-            this.mesh.position.z = this.origin.z;
-        }
-        return this.mesh;
+        //if (this.mesh !== null) {
+        //    this.mesh.position.x = this.origin.x;
+        //    this.mesh.position.y = this.origin.y;
+        //    this.mesh.position.z = this.origin.z;
+        //}
+        //return this.mesh;
     }
     
     List.prototype.rotate = function (x, y, z) {
@@ -303,10 +311,7 @@ window.addEventListener('DOMContentLoaded', function () {
     Map.prototype.constructor = Map;
     function Map(parent){
         this.parent = parent;
-//        this.keys = new List(parent, false, false, 'square', false, this.parent !== null ? this.parent.scale : 1.0);
-        //        this.values = [];
         this.lists = [];
-        this.alignment = 'horizontal'; //keys alignment.if keys are horizontal aligned, values will be vertically aligned.
         this.scale = this.parent !== null ? this.parent.scale : 1;
         this.origin = {
             x: this.parent !== null ? this.parent.cursor.x : 0, 
@@ -319,17 +324,11 @@ window.addEventListener('DOMContentLoaded', function () {
     Map.prototype.Add = function (k, v) {
         var i = this.FindIndex(k);
         if (i < 0) {
-            //this.keys.Add(k);
-            //this.NextLine();
-            //if (this.keys.Length() > 1) {
-            //    this.NextColumn();
-            //}
-            this.cursor.y = 0;
-            if (this.lists.length > 1) {
-               // this.NextColumn();
+            if (this.lists.length > 0) {
+                this.NextLine();
             }
-            var list = new List(this, false, false, 'disc', false, this.scale);
-            list.alignment = 'vertical';
+            
+            var list = new List(this, false, false, 'disc', true, this.scale);
             this.lists.push(list);
             i = this.lists.length - 1;
             this.lists[i].Add(k);
@@ -344,35 +343,33 @@ window.addEventListener('DOMContentLoaded', function () {
             }
         }
         return -1;
-        //for (var i = 0; i < this.keys.Length(); ++i) {
-        //    if (this.keys.At(i).value === k) {
-        //        return i;
-        //    }
-        //}
-        //return -1;
     }
     
+    Map.prototype.translate = function (dx, dy, dz){
+        for (var i = 0; i < this.lists.length; ++i) {
+            this.lists[i].translate(dx, dy, dz);
+        }
+    }
+    
+    Map.prototype.locate = function (x, y, z){
+        var dx = x - this.origin.x;
+        var dy = y - this.origin.y;
+        var dz = z - this.origin.z;
+        this.translate(dx, dy, dz);
+    }
+
+    Map.prototype.rotate = function (x, y, z){
+        for (var i = 0; i < this.lists.length; ++i) {
+            this.lists[i].rotate(x, y, z);
+        }
+    }
+
     Map.prototype.Draw = function (scene) {
-        this.mesh = null;
         if (this.showorder !== null && this.showorder <= root.globalshoworder) {
             for (var i = 0; i < this.lists.length; ++i) {
-                var e = this.lists[i].Draw(scene);
-                if (e !== null) {
-                    if (this.mesh === null) {
-                        this.mesh = e;
-                    }
-                    else {
-                        e.parent = this.mesh;
-                    }
-                }
+                this.lists[i].Draw(scene);
             }
         }
-        if (this.mesh !== null) {
-            this.mesh.position.x = this.origin.x;
-            this.mesh.position.y = this.origin.y;
-            this.mesh.position.z = this.origin.z;
-        }
-        return this.mesh;
     }    
 
     var globalqueue = [];
@@ -407,21 +404,19 @@ window.addEventListener('DOMContentLoaded', function () {
     }
     
     function testList(){
-        var shape = 'square';
-        var l = new List(root, false, null, shape, true, 0.5);
+        var shape = 'disc';
+        root.scale = 0.5;
+        var l = new List(root, false, null, shape, true);
         l.Add(7);
         l.Add(8);
         l.Add(5);
         l.AddRange([3, 6, 9, 10]);
-        l.rotate(0, 0, -Math.PI / 2);
+        //l.rotate(0, 0, -Math.PI / 2);
         globalqueue.push(l);
-        //root.NextLine();
-        root.cursor.x = 1;
-        root.cursor.y = 0;
-        var l2 = new List(root, false, null, shape, true, 0.5);
-        //l2.alignment = 'vertical';
+        root.NextLine();
+        var l2 = new List(root, false, null, shape, true);
         l2.AddRange([2, 1, 3, 6, 8, 4]);
-        l2.rotate(0, 0, -Math.PI / 2);
+        //l2.rotate(0, 0, -Math.PI / 2);
         globalqueue.push(l2);
     }
     
@@ -460,10 +455,14 @@ window.addEventListener('DOMContentLoaded', function () {
     
     function testMap(){
         var map = new Map(root);
-        globalqueue.push(map);
         map.Add(1, 4);
+ //       map.Add(1, 5);
         map.Add(3, 0);
-        // map.Add(1, 2);
+ //       map.Add(1, 2);
+        map.Add(5, 4);
+  //      map.rotate(0, 0, Math.PI / 2);
+
+        globalqueue.push(map);
     }
     
     //testElement();
