@@ -101,7 +101,6 @@ window.addEventListener('DOMContentLoaded', function () {
             var mat = new BABYLON.StandardMaterial("element", scene);
             if (this.shape == 'disc') {
                 this.mesh = BABYLON.Mesh.CreateDisc("element", 0.5 * this.scale, 40, scene, false, 5);
-              //  this.mesh.rotation = new BABYLON.Vector3(Math.PI, 0, 0);
             }
             else if (this.shape == 'square') {
                 this.mesh = BABYLON.Mesh.CreatePlane("element", this.scale, scene, false, 2);
@@ -109,8 +108,11 @@ window.addEventListener('DOMContentLoaded', function () {
             this.mesh.material = mat;
             var tex = new BABYLON.DynamicTexture("dynamic texture", 512, scene, true);
             this.mesh.material.diffuseTexture = tex;
-            this.mesh.material.diffuseTexture.uScale = 1;
-            this.mesh.material.diffuseTexture.vScale = -1;
+            if (this.shape === 'disc') {
+                this.mesh.material.diffuseTexture.uScale = 1;
+                this.mesh.material.diffuseTexture.vScale = -1;
+            }
+
             var hl = false;
             if (!hl && this.hlindex < this.highlightorder.length && root.globalshoworder === this.highlightorder[this.hlindex]) {
                 hl = true;
@@ -334,6 +336,7 @@ window.addEventListener('DOMContentLoaded', function () {
             this.lists.push(list);
             i = this.lists.length - 1;
             this.lists[i].Add(k);
+            this.lists[i].elements[0].shape = 'square';
         }
         this.lists[i].Add(v);
     }
@@ -460,11 +463,11 @@ window.addEventListener('DOMContentLoaded', function () {
         root.shape = 'square';
         var map = new Map(root);
         map.Add(1, 4);
- //       map.Add(1, 5);
+        map.Add(1, 5);
         map.Add(3, 0);
- //       map.Add(1, 2);
+        map.Add(1, 2);
         map.Add(5, 4);
-        //map.rotate(0, 0, Math.PI / 2);
+        //map.rotate(0, 0, -Math.PI / 2);
 
         globalqueue.push(map);
     }
@@ -472,8 +475,8 @@ window.addEventListener('DOMContentLoaded', function () {
     //testElement();
     //testArrow();
     //testList();
-    //testBinarySearch();
-    testMap();
+    testBinarySearch();
+    //testMap();
 
     var createScene = function (elements, map, hl) {
         globalx = 0;
