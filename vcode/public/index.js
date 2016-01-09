@@ -100,8 +100,8 @@ window.addEventListener('DOMContentLoaded', function () {
         if (this.showorder !== null && this.showorder <= root.globalshoworder) {
             var mat = new BABYLON.StandardMaterial("element", scene);
             if (this.shape == 'disc') {
-                this.mesh = BABYLON.Mesh.CreateDisc("element", 0.5 * this.scale, 40, scene, false, 2);
-                this.mesh.rotation = new BABYLON.Vector3(Math.PI, 0, 0);
+                this.mesh = BABYLON.Mesh.CreateDisc("element", 0.5 * this.scale, 40, scene, false, 5);
+              //  this.mesh.rotation = new BABYLON.Vector3(Math.PI, 0, 0);
             }
             else if (this.shape == 'square') {
                 this.mesh = BABYLON.Mesh.CreatePlane("element", this.scale, scene, false, 2);
@@ -109,6 +109,8 @@ window.addEventListener('DOMContentLoaded', function () {
             this.mesh.material = mat;
             var tex = new BABYLON.DynamicTexture("dynamic texture", 512, scene, true);
             this.mesh.material.diffuseTexture = tex;
+            this.mesh.material.diffuseTexture.uScale = 1;
+            this.mesh.material.diffuseTexture.vScale = -1;
             var hl = false;
             if (!hl && this.hlindex < this.highlightorder.length && root.globalshoworder === this.highlightorder[this.hlindex]) {
                 hl = true;
@@ -225,17 +227,17 @@ window.addEventListener('DOMContentLoaded', function () {
     }
 
     List.prototype.Draw = function (scene){
-    //    this.mesh = null;
+        this.mesh = null;
         //if (this.showorder !== null && this.showorder <= root.globalshoworder)
          {
             for (var i = 0; i < this.elements.length; ++i) {
                 var e = this.elements[i].Draw(scene);
                 if (e !== null) {
                     if (this.mesh === null) {
-       //                 this.mesh = e;
+                        this.mesh = e;
                     }
                     else {
-         //               e.parent = this.mesh;
+                        e.parent = this.mesh;
                         //shape disc is special. Single elemnt needs be roated around x-axis for PI. 
                         //But in the list, the first element will be rotated like a single element, 
                         // since the other elements in the list are children of the first one, they don't need self rotated in the Element.Draw(scene).
@@ -244,12 +246,12 @@ window.addEventListener('DOMContentLoaded', function () {
                 }
             }
         }
-        //if (this.mesh !== null) {
-        //    this.mesh.position.x = this.origin.x;
-        //    this.mesh.position.y = this.origin.y;
-        //    this.mesh.position.z = this.origin.z;
-        //}
-        //return this.mesh;
+        if (this.mesh !== null) {
+            this.mesh.position.x = this.origin.x;
+            this.mesh.position.y = this.origin.y;
+            this.mesh.position.z = this.origin.z;
+        }
+        return this.mesh;
     }
     
     List.prototype.rotate = function (x, y, z) {
@@ -413,11 +415,11 @@ window.addEventListener('DOMContentLoaded', function () {
         l.AddRange([3, 6, 9, 10]);
         //l.rotate(0, 0, -Math.PI / 2);
         globalqueue.push(l);
-        root.NextLine();
-        var l2 = new List(root, false, null, shape, true);
-        l2.AddRange([2, 1, 3, 6, 8, 4]);
+//        root.NextLine();
+//        var l2 = new List(root, false, null, shape, true);
+//        l2.AddRange([2, 1, 3, 6, 8, 4]);
         //l2.rotate(0, 0, -Math.PI / 2);
-        globalqueue.push(l2);
+//        globalqueue.push(l2);
     }
     
     function testBinarySearch()    {
@@ -454,22 +456,24 @@ window.addEventListener('DOMContentLoaded', function () {
     }
     
     function testMap(){
+        root.scale = 0.5;
+        root.shape = 'square';
         var map = new Map(root);
         map.Add(1, 4);
  //       map.Add(1, 5);
         map.Add(3, 0);
  //       map.Add(1, 2);
         map.Add(5, 4);
-  //      map.rotate(0, 0, Math.PI / 2);
+        //map.rotate(0, 0, Math.PI / 2);
 
         globalqueue.push(map);
     }
     
     //testElement();
     //testArrow();
-    testList();
+    //testList();
     //testBinarySearch();
-    //testMap();
+    testMap();
 
     var createScene = function (elements, map, hl) {
         globalx = 0;
