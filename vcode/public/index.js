@@ -376,6 +376,16 @@ window.addEventListener('DOMContentLoaded', function () {
             }
         }
     }    
+    
+    
+    BinaryTree.prototype = new Element(null, null);
+    BinaryTree.prototype.constructor = BinaryTree;
+    
+    function BinaryTree(parent){
+        this.parent = parent;
+
+    }
+    
 
     var globalqueue = [];
 	var total = 0;
@@ -427,9 +437,17 @@ window.addEventListener('DOMContentLoaded', function () {
     
     function testBinarySearch()    {
         var shape = 'square';
+        
+        var t = new Element(9, root, false, shape, 0.5);
+        root.NextLine(-1);
+        globalqueue.push(t);
+
         var list = new List(root, false, null, shape, false, 0.5);
         list.AddRange([2, 5, 6, 6, 7, 8, 9]);
-        var target = 8;
+        var target = 9;
+        
+        // another idea to highlight l/h: list.At([]);
+
         var l = 0, h = list.elements.length - 1, m = 0, result = -1;
         while (l <= h) {
             m = (l + h) / 2;
@@ -440,10 +458,11 @@ window.addEventListener('DOMContentLoaded', function () {
             else if (list.At(m).value < target) {
                 l = m + 1;
             }
-            else {
+            else if(list.At(m).value > target){
                 h = m - 1;
             }
         }
+
         globalqueue.push(list);
     }
 
@@ -497,7 +516,7 @@ window.addEventListener('DOMContentLoaded', function () {
 	
 	engine.runRenderLoop(function () {
         if (root.globalshoworder  <= root.predefinedshoworder) {
-            if (total % 20 === 19) {
+            if (total % 30 === 19) {
                 var scene = createScene(elements, map, hl);
                 scene.render();
                 ++root.globalshoworder;
