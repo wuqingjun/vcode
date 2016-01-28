@@ -378,6 +378,7 @@ window.addEventListener('DOMContentLoaded', function () {
     }    
     
     
+    
     BinaryTree.prototype = new Element(null, null);
     BinaryTree.prototype.constructor = BinaryTree;
     

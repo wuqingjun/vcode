@@ -1,0 +1,10 @@
+{
+  "name": "datastructuretest",
+  "version": "0.0.0",
+  "description": "datastructuretest",
+  "main": "app.js",
+  "author": {
+    "name": "qjwu9_000",
+    "email": ""
+  }
+}
