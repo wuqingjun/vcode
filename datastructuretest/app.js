@@ -4,6 +4,7 @@
     this.value = v;
     this.left = null;
     this.right = null;
+    this.visible = false;
 }
 
 function BuildBinaryTree(l){
@@ -11,16 +12,15 @@ function BuildBinaryTree(l){
     var a = [[]];
     for (var i = -h; i <= h; ++i) {
         if (l === 1 || i !== 0) {
-            a[0].push(new TreeNode(i, l, 0));
+            a[0].push(new TreeNode(i, 0, 0));
         }
     }
     for (var i = 0; i < h; ++i) {
         a.push([]);
         for (var j = 0; a[i].length > 1 && j < a[i].length / 2; ++j) {
             var n = new TreeNode(0, 0, 0);
-            console.log('i = ' + i + ', j = ' + j);
             n.x = (a[i][2 * j].x + a[i][2 * j + 1].x) / 2;
-            n.y = a[i % 2][2 * j].y - 1;
+            n.y = a[i % 2][2 * j].y + 1;
             n.left = a[i][2 * j];
             n.right = a[i][2 * j + 1];
             n.value = (n.left.value + n.right.value) / 2;

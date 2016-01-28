@@ -36,6 +36,7 @@ window.addEventListener('DOMContentLoaded', function () {
         this.scale = scale || (parent !== null ? parent.scale: 1.0);
         this.alignment = 'horizontal', // 'vertical', 'diagonal'
         this.dimension = { x: this.scale, y: this.scale, z: 0 };
+        this.drawFrame = true;
         this.showorder = increaseshoworder !== false ? ++root.predefinedshoworder : root.predefinedshoworder;
         this.origin = {
             x: this.parent === null ? 0 : this.parent.cursor.x, 
@@ -120,13 +121,16 @@ window.addEventListener('DOMContentLoaded', function () {
             }
             this.mesh.material.emissiveColor = hl ? new BABYLON.Color3.Yellow: new BABYLON.Color3.Green;
             tex.drawText(this.value, 200, 300, "bold 170px Segoe UI", "black", "#555555");
-            var lines = BABYLON.Mesh.CreateLines("lines", [
-                new BABYLON.Vector3(-0.5 * this.scale, -0.5 * this.scale, 0),
-                new BABYLON.Vector3(-0.5 * this.scale, 0.5 * this.scale, 0),
-                new BABYLON.Vector3(0.5 * this.scale, 0.5 * this.scale, 0),
-                new BABYLON.Vector3(0.5 * this.scale, -0.5 * this.scale, 0),
-                new BABYLON.Vector3(-0.5 * this.scale, -0.5 * this.scale, 0)], scene);
-            lines.parent = this.mesh;
+            if (this.drawFrame) {
+                var lines = BABYLON.Mesh.CreateLines("lines", [
+                    new BABYLON.Vector3(-0.5 * this.scale, -0.5 * this.scale, 0),
+                    new BABYLON.Vector3(-0.5 * this.scale, 0.5 * this.scale, 0),
+                    new BABYLON.Vector3(0.5 * this.scale, 0.5 * this.scale, 0),
+                    new BABYLON.Vector3(0.5 * this.scale, -0.5 * this.scale, 0),
+                    new BABYLON.Vector3(-0.5 * this.scale, -0.5 * this.scale, 0)], scene);
+                lines.parent = this.mesh;
+            }
+
             this.mesh.position.x = this.origin.x;
             this.mesh.position.y = this.origin.y;
             this.mesh.position.z = this.origin.z;
@@ -377,7 +381,37 @@ window.addEventListener('DOMContentLoaded', function () {
         }
     }    
     
+    function TreeNode(x, y, v) {
+        this.x = x;
+        this.y = y;
+        this.value = v;
+        this.left = null;
+        this.right = null;
+        this.visible = false;
+    }
     
+    function BuildBinaryTree(l) {
+        var h = parseInt(Math.pow(2, l) / 4);
+        var a = [[]];
+        for (var i = -h; i <= h; ++i) {
+            if (l === 1 || i !== 0) {
+                a[0].push(new TreeNode(i, 0, 0));
+            }
+        }
+        for (var i = 0; i < h; ++i) {
+            a.push([]);
+            for (var j = 0; a[i].length > 1 && j < a[i].length / 2; ++j) {
+                var n = new TreeNode(0, 0, 0);
+                n.x = (a[i][2 * j].x + a[i][2 * j + 1].x) / 2;
+                n.y = a[i % 2][2 * j].y + 1;
+                n.left = a[i][2 * j];
+                n.right = a[i][2 * j + 1];
+                n.value = (n.left.value + n.right.value) / 2;
+                a[i + 1].push(n);
+            }
+        }
+        return a[l - 1][0];
+    }    
     
     BinaryTree.prototype = new Element(null, null);
     BinaryTree.prototype.constructor = BinaryTree;
@@ -492,11 +526,32 @@ window.addEventListener('DOMContentLoaded', function () {
         globalqueue.push(map);
     }
     
+    function preOrder(t){
+        if (null !== t) {
+            var e = new Element(t.value, root, false, "disc", 0.8);
+            e.drawFrame = false;
+            e.locate(t.x, t.y, 0);
+            globalqueue.push(e);
+            if (t.left !== null) {
+
+            }
+
+            preOrder(t.left);
+            preOrder(t.right);
+        }
+    }
+
+    function testBinaryTree(){
+        var t = BuildBinaryTree(3);
+        preOrder(t);
+    }
+    
     //testElement();
     //testArrow();
     //testList();
-    testBinarySearch();
+    //testBinarySearch();
     //testMap();
+    testBinaryTree();
 
     var createScene = function (elements, map, hl) {
         globalx = 0;
