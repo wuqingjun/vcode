@@ -7,13 +7,10 @@
 }
 
 function BuildBinaryTree(l){
-    if (l == 1) {
-        return new TreeNode(0, 0, 0);
-    }
-    var h = Math.pow(2, l) / 4;
+    var h = parseInt(Math.pow(2, l) / 4);
     var a = [[]];
     for (var i = -h; i <= h; ++i) {
-        if (i !== 0) {
+        if (l === 1 || i !== 0) {
             a[0].push(new TreeNode(i, l, 0));
         }
     }
