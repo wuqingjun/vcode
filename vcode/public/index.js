@@ -37,6 +37,7 @@ window.addEventListener('DOMContentLoaded', function () {
         this.alignment = 'horizontal', // 'vertical', 'diagonal'
         this.dimension = { x: this.scale, y: this.scale, z: 0 };
         this.drawFrame = true;
+        this.lines = [];
         this.showorder = increaseshoworder !== false ? ++root.predefinedshoworder : root.predefinedshoworder;
         this.origin = {
             x: this.parent === null ? 0 : this.parent.cursor.x, 
@@ -130,6 +131,9 @@ window.addEventListener('DOMContentLoaded', function () {
                     new BABYLON.Vector3(-0.5 * this.scale, -0.5 * this.scale, 0)], scene);
                 lines.parent = this.mesh;
             }
+            
+            var lines2 = BABYLON.Mesh.CreateLines("lines2", this.lines, scene);
+            lines2.parent = this.mesh;
 
             this.mesh.position.x = this.origin.x;
             this.mesh.position.y = this.origin.y;
@@ -403,7 +407,7 @@ window.addEventListener('DOMContentLoaded', function () {
             for (var j = 0; a[i].length > 1 && j < a[i].length / 2; ++j) {
                 var n = new TreeNode(0, 0, 0);
                 n.x = (a[i][2 * j].x + a[i][2 * j + 1].x) / 2;
-                n.y = a[i % 2][2 * j].y + 1;
+                n.y = a[i][2 * j].y + 1;
                 n.left = a[i][2 * j];
                 n.right = a[i][2 * j + 1];
                 n.value = (n.left.value + n.right.value) / 2;
@@ -418,9 +422,95 @@ window.addEventListener('DOMContentLoaded', function () {
     
     function BinaryTree(parent){
         this.parent = parent;
-
+        this.root = null;
+        this.scale = parent !== null ? parent.scale : 1.0;
+        this.nodescale = 0.7;
     }
     
+    BinaryTree.prototype.BuildPositionTree = function (l){
+        var h = parseInt(Math.pow(2, l) / 4);
+        var a = [[]];
+        for (var i = -h; i <= h; ++i) {
+            if (l === 1 || i !== 0) {
+                a[0].push(new TreeNode(i, 0, 0));
+            }
+        }
+        for (var i = 0; i < h; ++i) {
+            a.push([]);
+            for (var j = 0; a[i].length > 1 && j < a[i].length / 2; ++j) {
+                var n = new TreeNode(0, 0, 0);
+                n.x = (a[i][2 * j].x + a[i][2 * j + 1].x) / 2;
+                n.y = a[i][2 * j].y + 1;
+                n.left = a[i][2 * j];
+                n.right = a[i][2 * j + 1];
+                n.value = (n.left.value + n.right.value) / 2;
+                a[i + 1].push(n);
+            }
+        }
+        this.root = a[l - 1][0];
+    }
+    
+    BinaryTree.prototype.PreOrderDraw = function (t, visible) {
+        if (null !== t && (visible === null || t.visible === visible) ) {
+            var e = new Element(t.value, this.parent, true, "disc", this.nodescale);
+            e.highlightorder.push(++this.parent.predefinedshoworder);
+            e.drawFrame = false;
+            e.locate(t.x, t.y, 0);
+            globalqueue.push(e);
+            if (t.left !== null && (visible === null || t.left.visible === visible) ) {
+                var x0 = 0, y0 = -0.5 * e.scale, x1 = t.left.x - t.x, y1 = t.left.y - t.y + 0.5 * e.scale;
+                e.lines.push(new BABYLON.Vector3(x0, y0, 0));
+                e.lines.push(new BABYLON.Vector3(x1, y1, 0));
+            }
+            if (t.right !== null &&(visible === null || t.right.visible === visible) ) {
+                var x0 = 0, y0 = -0.5 * e.scale, x1 = t.right.x - t.x, y1 = t.right.y - t.y + 0.5 * e.scale;
+                e.lines.push(new BABYLON.Vector3(x0, y0, 0));
+                e.lines.push(new BABYLON.Vector3(x1, y1, 0));
+            }
+            
+            this.PreOrderDraw(t.left, visible);
+            this.PreOrderDraw(t.right, visible);
+        }
+    }
+
+    BinaryTree.prototype.DrawPositionTree = function (){
+        this.PreOrderDraw(this.root, null);
+    }
+    
+    BinaryTree.prototype.Draw = function (){
+        this.PreOrderDraw(this.root, true);
+    }
+    
+    BinaryTree.prototype._insert = function (node, v){
+        if (node !== null) {
+            if (!node.visible) {
+                node.value = v;
+                node.visible = true;
+                return node;
+            } else if (node.left !== null && node.value > v) {
+                this._insert(node.left, v);
+            } else if (node.right !== null && node.value < v) {
+                this._insert(node.right, v);
+            }
+        }
+    }
+
+    BinaryTree.prototype.Insert = function (v){
+        return this._insert(this.root, v);
+    }
+    
+    BinaryTree.prototype._search = function (node, v){
+        if (node !== null && node.visible) {
+            if (node.value === v) {
+                return node;
+            }
+            else if (node.value > v) {
+                this._search(node.left, v);
+            } else {
+                this._search(node.right, v);
+            }
+        }
+    }
 
     var globalqueue = [];
 	var total = 0;
@@ -461,13 +551,13 @@ window.addEventListener('DOMContentLoaded', function () {
         l.Add(8);
         l.Add(5);
         l.AddRange([3, 6, 9, 10]);
-        //l.rotate(0, 0, -Math.PI / 2);
+        l.rotate(0, 0, -Math.PI / 2);
         globalqueue.push(l);
-//        root.NextLine();
-//        var l2 = new List(root, false, null, shape, true);
-//        l2.AddRange([2, 1, 3, 6, 8, 4]);
-        //l2.rotate(0, 0, -Math.PI / 2);
-//        globalqueue.push(l2);
+        root.NextLine();
+        var l2 = new List(root, false, null, shape, true);
+        l2.AddRange([2, 1, 3, 6, 8, 4]);
+        l2.rotate(0, 0, -Math.PI / 2);
+        globalqueue.push(l2);
     }
     
     function testBinarySearch()    {
@@ -525,26 +615,22 @@ window.addEventListener('DOMContentLoaded', function () {
 
         globalqueue.push(map);
     }
+       
+    function testBinaryTree() {
+        var bt = new BinaryTree(root);
+        bt.BuildPositionTree(4);
+        //bt.DrawPositionTree();
+
+        bt.Insert(5);
+        bt.Insert(3);
+        bt.Insert(4);
+        bt.Insert(2);
+        bt.Insert(9);
+        bt.Insert(7);
+        bt.Insert(8);
+        bt.Draw();
+    }
     
-    function preOrder(t){
-        if (null !== t) {
-            var e = new Element(t.value, root, false, "disc", 0.8);
-            e.drawFrame = false;
-            e.locate(t.x, t.y, 0);
-            globalqueue.push(e);
-            if (t.left !== null) {
-
-            }
-
-            preOrder(t.left);
-            preOrder(t.right);
-        }
-    }
-
-    function testBinaryTree(){
-        var t = BuildBinaryTree(3);
-        preOrder(t);
-    }
     
     //testElement();
     //testArrow();

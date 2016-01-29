@@ -20,7 +20,7 @@ function BuildBinaryTree(l){
         for (var j = 0; a[i].length > 1 && j < a[i].length / 2; ++j) {
             var n = new TreeNode(0, 0, 0);
             n.x = (a[i][2 * j].x + a[i][2 * j + 1].x) / 2;
-            n.y = a[i % 2][2 * j].y + 1;
+            n.y = a[i][2 * j].y + 1;
             n.left = a[i][2 * j];
             n.right = a[i][2 * j + 1];
             n.value = (n.left.value + n.right.value) / 2;
@@ -48,7 +48,7 @@ function BredthFirst(t){
     }
 }
 
-var t = BuildBinaryTree(5);
+var t = BuildBinaryTree(4);
 
 BredthFirst(t);
 
