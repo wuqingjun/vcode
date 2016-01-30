@@ -392,6 +392,9 @@ window.addEventListener('DOMContentLoaded', function () {
         this.left = null;
         this.right = null;
         this.visible = false;
+        this.highlightorders = [];
+        this.element = null;
+        this.parent = null;
     }
     
     function BuildBinaryTree(l) {
@@ -410,6 +413,8 @@ window.addEventListener('DOMContentLoaded', function () {
                 n.y = a[i][2 * j].y + 1;
                 n.left = a[i][2 * j];
                 n.right = a[i][2 * j + 1];
+                n.left.parent = n;
+                n.right.parent = n;
                 n.value = (n.left.value + n.right.value) / 2;
                 a[i + 1].push(n);
             }
@@ -444,6 +449,24 @@ window.addEventListener('DOMContentLoaded', function () {
                 n.left = a[i][2 * j];
                 n.right = a[i][2 * j + 1];
                 n.value = (n.left.value + n.right.value) / 2;
+                n.element = new Element(n.value, this.parent, true, "disc", this.nodescale);
+                n.highlightorders.push(++this.parent.predefinedshoworder);
+                n.highlightorder.push(++this.parent.predefinedshoworder);
+                n.drawFrame = false;
+                n.locate(n.x, n.y, 0);
+                
+                // set the line between parent and children.
+                // the problem here is: when drawing the tree, if the child node is not visible, 
+                // don't draw the line!
+
+                var temp = [n.left, n.right];
+                for(var i = 0; i < temp.length; ++i)
+                {
+                    var x0 = 0, y0 = -0.5 * e.scale, x1 = temp[i].x - t.x, y1 = temp[i].y - t.y + 0.5 * e.scale;
+                    e.lines.push(new BABYLON.Vector3(x0, y0, 0));
+                    e.lines.push(new BABYLON.Vector3(x1, y1, 0));
+                }
+
                 a[i + 1].push(n);
             }
         }
@@ -453,6 +476,10 @@ window.addEventListener('DOMContentLoaded', function () {
     BinaryTree.prototype.PreOrderDraw = function (t, visible) {
         if (null !== t && (visible === null || t.visible === visible) ) {
             var e = new Element(t.value, this.parent, true, "disc", this.nodescale);
+            //for (var i = 0; i < t.highlightorders.length; ++i) {
+            //    e.highlightorder.push(t.highlightorders[i]);
+            //}
+            //e.highlightorder = t.highlightorders;
             e.highlightorder.push(++this.parent.predefinedshoworder);
             e.drawFrame = false;
             e.locate(t.x, t.y, 0);
@@ -493,6 +520,7 @@ window.addEventListener('DOMContentLoaded', function () {
                 this._insert(node.right, v);
             }
         }
+        return null;
     }
 
     BinaryTree.prototype.Insert = function (v){
