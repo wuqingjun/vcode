@@ -99,7 +99,8 @@ window.addEventListener('DOMContentLoaded', function () {
 
     Element.prototype.Draw = function (scene) {
         this.mesh = null;
-        if (this.showorder !== null && this.showorder <= root.globalshoworder) {
+        if (this.showorder !== null && this.showorder <= root.globalshoworder) // {
+      {
             var mat = new BABYLON.StandardMaterial("element", scene);
             if (this.shape == 'disc') {
                 this.mesh = BABYLON.Mesh.CreateDisc("element", 0.5 * this.scale, 40, scene, false, 5);
@@ -132,8 +133,12 @@ window.addEventListener('DOMContentLoaded', function () {
                 lines.parent = this.mesh;
             }
             
-            var lines2 = BABYLON.Mesh.CreateLines("lines2", this.lines, scene);
-            lines2.parent = this.mesh;
+            for (var i = 0; i < this.lines.length; ++i) {
+                if (this.lines[i].visible) {
+                    var line = BABYLON.Mesh.CreateLines("line" + i.toString(), this.lines[i].line, scene);
+                    line.parent = this.mesh;
+                }
+            }
 
             this.mesh.position.x = this.origin.x;
             this.mesh.position.y = this.origin.y;
@@ -395,6 +400,7 @@ window.addEventListener('DOMContentLoaded', function () {
         this.highlightorders = [];
         this.element = null;
         this.parent = null;
+        this.lines = [];
     }
     
     function BuildBinaryTree(l) {
@@ -429,7 +435,7 @@ window.addEventListener('DOMContentLoaded', function () {
         this.parent = parent;
         this.root = null;
         this.scale = parent !== null ? parent.scale : 1.0;
-        this.nodescale = 0.7;
+        this.nodescale = 0.8;
     }
     
     BinaryTree.prototype.BuildPositionTree = function (l){
@@ -437,7 +443,12 @@ window.addEventListener('DOMContentLoaded', function () {
         var a = [[]];
         for (var i = -h; i <= h; ++i) {
             if (l === 1 || i !== 0) {
-                a[0].push(new TreeNode(i, 0, 0));
+                var n = new TreeNode(i, 0, 0);
+                a[0].push(n);
+                n.element = new Element(n.value, this.parent, true, "disc", this.nodescale);
+                n.highlightorders.push(++this.parent.predefinedshoworder);
+                n.element.drawFrame = false;
+                n.element.locate(n.x, n.y, 0);
             }
         }
         for (var i = 0; i < h; ++i) {
@@ -449,22 +460,21 @@ window.addEventListener('DOMContentLoaded', function () {
                 n.left = a[i][2 * j];
                 n.right = a[i][2 * j + 1];
                 n.value = (n.left.value + n.right.value) / 2;
+                n.left.parent = n;
+                n.right.parent = n;
                 n.element = new Element(n.value, this.parent, true, "disc", this.nodescale);
                 n.highlightorders.push(++this.parent.predefinedshoworder);
-                n.highlightorder.push(++this.parent.predefinedshoworder);
-                n.drawFrame = false;
-                n.locate(n.x, n.y, 0);
+                n.element.drawFrame = false;
+                n.element.locate(n.x, n.y, 0);
                 
-                // set the line between parent and children.
-                // the problem here is: when drawing the tree, if the child node is not visible, 
-                // don't draw the line!
-
                 var temp = [n.left, n.right];
-                for(var i = 0; i < temp.length; ++i)
+                for(var k = 0; k < temp.length; ++k)
                 {
-                    var x0 = 0, y0 = -0.5 * e.scale, x1 = temp[i].x - t.x, y1 = temp[i].y - t.y + 0.5 * e.scale;
-                    e.lines.push(new BABYLON.Vector3(x0, y0, 0));
-                    e.lines.push(new BABYLON.Vector3(x1, y1, 0));
+                    var x0 = 0, y0 = -0.5 * this.nodescale, x1 = temp[k].x - n.x, y1 = temp[k].y - n.y + 0.5 * this.nodescale;
+                    n.element.lines.push({
+                        visible: false, 
+                        line: [new BABYLON.Vector3(x0, y0, 0), new BABYLON.Vector3(x1, y1, 0)]
+                    });
                 }
 
                 a[i + 1].push(n);
@@ -473,39 +483,30 @@ window.addEventListener('DOMContentLoaded', function () {
         this.root = a[l - 1][0];
     }
     
-    BinaryTree.prototype.PreOrderDraw = function (t, visible) {
-        if (null !== t && (visible === null || t.visible === visible) ) {
-            var e = new Element(t.value, this.parent, true, "disc", this.nodescale);
-            //for (var i = 0; i < t.highlightorders.length; ++i) {
-            //    e.highlightorder.push(t.highlightorders[i]);
-            //}
-            //e.highlightorder = t.highlightorders;
-            e.highlightorder.push(++this.parent.predefinedshoworder);
-            e.drawFrame = false;
-            e.locate(t.x, t.y, 0);
-            globalqueue.push(e);
-            if (t.left !== null && (visible === null || t.left.visible === visible) ) {
-                var x0 = 0, y0 = -0.5 * e.scale, x1 = t.left.x - t.x, y1 = t.left.y - t.y + 0.5 * e.scale;
-                e.lines.push(new BABYLON.Vector3(x0, y0, 0));
-                e.lines.push(new BABYLON.Vector3(x1, y1, 0));
-            }
-            if (t.right !== null &&(visible === null || t.right.visible === visible) ) {
-                var x0 = 0, y0 = -0.5 * e.scale, x1 = t.right.x - t.x, y1 = t.right.y - t.y + 0.5 * e.scale;
-                e.lines.push(new BABYLON.Vector3(x0, y0, 0));
-                e.lines.push(new BABYLON.Vector3(x1, y1, 0));
+    BinaryTree.prototype.PreOrderDraw = function (t, visible, scene) {
+        if (null !== t && (visible === null || t.visible === visible)) {
+            if (t.element.lines.length > 0) {
+                var oldvisible0 = t.element.lines[0].visible;
+                var oldvisible1 = t.element.lines[1].visible;
+                if (visible === null) {
+                    t.element.lines[0].visible = true;
+                    t.element.lines[1].visible = true;
+                }
             }
             
-            this.PreOrderDraw(t.left, visible);
-            this.PreOrderDraw(t.right, visible);
+            t.element.Draw(scene);
+            this.PreOrderDraw(t.left, visible, scene);
+            this.PreOrderDraw(t.right, visible, scene);
         }
     }
 
-    BinaryTree.prototype.DrawPositionTree = function (){
-        this.PreOrderDraw(this.root, null);
+    BinaryTree.prototype.DrawPositionTree = function (scene){
+        this.PreOrderDraw(this.root, null, scene);
     }
     
-    BinaryTree.prototype.Draw = function (){
-        this.PreOrderDraw(this.root, true);
+    BinaryTree.prototype.Draw = function (scene){
+        // In debug mode, only visible nodes will be drawn.
+        this.PreOrderDraw(this.root, null, scene);
     }
     
     BinaryTree.prototype._insert = function (node, v){
@@ -644,11 +645,15 @@ window.addEventListener('DOMContentLoaded', function () {
         globalqueue.push(map);
     }
        
-    function testBinaryTree() {
+    function testBinaryTreeBuildPosition() {
         var bt = new BinaryTree(root);
         bt.BuildPositionTree(4);
-        //bt.DrawPositionTree();
-
+        globalqueue.push(bt);
+    }
+    
+    function testBinaryTreeInsertion() {
+        var bt = new BinaryTree(root);
+        bt.BuildPositionTree(4);
         bt.Insert(5);
         bt.Insert(3);
         bt.Insert(4);
@@ -657,6 +662,7 @@ window.addEventListener('DOMContentLoaded', function () {
         bt.Insert(7);
         bt.Insert(8);
         bt.Draw();
+        globalqueue.push(bt);
     }
     
     
@@ -665,7 +671,7 @@ window.addEventListener('DOMContentLoaded', function () {
     //testList();
     //testBinarySearch();
     //testMap();
-    testBinaryTree();
+    testBinaryTreeBuildPosition();
 
     var createScene = function (elements, map, hl) {
         globalx = 0;
