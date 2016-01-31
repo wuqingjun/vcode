@@ -99,8 +99,7 @@ window.addEventListener('DOMContentLoaded', function () {
 
     Element.prototype.Draw = function (scene) {
         this.mesh = null;
-        if (this.showorder !== null && this.showorder <= root.globalshoworder) // {
-      {
+        if (this.showorder !== null && this.showorder <= root.globalshoworder) {
             var mat = new BABYLON.StandardMaterial("element", scene);
             if (this.shape == 'disc') {
                 this.mesh = BABYLON.Mesh.CreateDisc("element", 0.5 * this.scale, 40, scene, false, 5);
