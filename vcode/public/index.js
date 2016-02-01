@@ -446,7 +446,7 @@ window.addEventListener('DOMContentLoaded', function () {
                 var n = new TreeNode(i, 0, 0);
                 a[0].push(n);
                 n.element = new Element(n.value, this.parent, false, "disc", this.nodescale);
-                n.highlightorders.push(this.parent.predefinedshoworder);
+                //n.highlightorders.push(this.parent.predefinedshoworder);
                 n.element.drawFrame = false;
                 n.element.locate(n.x, n.y, 0);
             }
@@ -463,7 +463,7 @@ window.addEventListener('DOMContentLoaded', function () {
                 n.left.parent = n;
                 n.right.parent = n;
                 n.element = new Element(n.value, this.parent, false, "disc", this.nodescale);
-                n.highlightorders.push(this.parent.predefinedshoworder);
+                //n.highlightorders.push(this.parent.predefinedshoworder);
                 n.element.drawFrame = false;
                 n.element.locate(n.x, n.y, 0);
                 
@@ -524,8 +524,8 @@ window.addEventListener('DOMContentLoaded', function () {
     
     BinaryTree.prototype.Draw = function (scene){
         // In debug mode, only visible nodes will be drawn.
-        this.DrawPositionTree(scene);
-        //this.PreOrderDraw(this.root, true, scene);
+        //this.DrawPositionTree(scene);
+        this.PreOrderDraw(this.root, true, scene);
     }
     
     BinaryTree.prototype._insert = function (node, v){
@@ -533,6 +533,13 @@ window.addEventListener('DOMContentLoaded', function () {
             if (!node.visible) {
                 node.value = v;
                 node.visible = true;
+                node.element.showorder = ++root.predefinedshoworder;
+                node.element.highlightorder.push(++this.parent.predefinedshoworder);
+                if (node.parent !== null && node.parent.visible) {
+                    for (var i = 0; i < node.lines.length; ++i) {
+                        node.element.lines[0].visible = true;
+                    }
+                }
                 return node;
             } else if (node.left !== null && node.value > v) {
                 this._insert(node.left, v);
@@ -691,7 +698,8 @@ window.addEventListener('DOMContentLoaded', function () {
     //testList();
     //testBinarySearch();
     //testMap();
-    testBinaryTreeBuildPosition();
+    //testBinaryTreeBuildPosition();
+    testBinaryTreeInsertion();
 
     var createScene = function (elements, map, hl) {
         globalx = 0;
