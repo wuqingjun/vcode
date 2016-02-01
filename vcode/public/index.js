@@ -400,6 +400,7 @@ window.addEventListener('DOMContentLoaded', function () {
         this.element = null;
         this.parent = null;
         this.lines = [];
+        this.debug = false;
     }
     
     function BuildBinaryTree(l) {
@@ -444,8 +445,8 @@ window.addEventListener('DOMContentLoaded', function () {
             if (l === 1 || i !== 0) {
                 var n = new TreeNode(i, 0, 0);
                 a[0].push(n);
-                n.element = new Element(n.value, this.parent, true, "disc", this.nodescale);
-                n.highlightorders.push(++this.parent.predefinedshoworder);
+                n.element = new Element(n.value, this.parent, false, "disc", this.nodescale);
+                n.highlightorders.push(this.parent.predefinedshoworder);
                 n.element.drawFrame = false;
                 n.element.locate(n.x, n.y, 0);
             }
@@ -461,8 +462,8 @@ window.addEventListener('DOMContentLoaded', function () {
                 n.value = (n.left.value + n.right.value) / 2;
                 n.left.parent = n;
                 n.right.parent = n;
-                n.element = new Element(n.value, this.parent, true, "disc", this.nodescale);
-                n.highlightorders.push(++this.parent.predefinedshoworder);
+                n.element = new Element(n.value, this.parent, false, "disc", this.nodescale);
+                n.highlightorders.push(this.parent.predefinedshoworder);
                 n.element.drawFrame = false;
                 n.element.locate(n.x, n.y, 0);
                 
@@ -484,18 +485,32 @@ window.addEventListener('DOMContentLoaded', function () {
     
     BinaryTree.prototype.PreOrderDraw = function (t, visible, scene) {
         if (null !== t && (visible === null || t.visible === visible)) {
-            if (t.element.lines.length > 0) {
+            var oldvisible = 0, oldvisible0 = null, oldvisible1 = null;
+            if (this.debug) {
+                t.visible = true;
+            }
+            if (t.element.lines.length > 0 && this.debug === true) {
                 var oldvisible0 = t.element.lines[0].visible;
                 var oldvisible1 = t.element.lines[1].visible;
-                if (visible === null) {
-                    t.element.lines[0].visible = true;
-                    t.element.lines[1].visible = true;
-                }
+                t.element.lines[0].visible = true;
+                t.element.lines[1].visible = true;
             }
             
-            t.element.Draw(scene);
+            if (t.visible) {
+                t.element.Draw(scene);
+            }
+            
             this.PreOrderDraw(t.left, visible, scene);
             this.PreOrderDraw(t.right, visible, scene);
+            if (oldvisible !== null) {
+                t.visible = oldvisible;
+            }
+            if (oldvisible0 !== null) {
+                t.element.lines[0].visible = oldvisible0;
+            }
+            if (oldvisible1 !== null) {
+                t.element.lines[1].visible = oldvisible1;
+            }
         }
     }
 
@@ -503,9 +518,14 @@ window.addEventListener('DOMContentLoaded', function () {
         this.PreOrderDraw(this.root, null, scene);
     }
     
+    BinaryTree.prototype.Debug = function (dbg){
+        this.debug = dbg;
+    }
+    
     BinaryTree.prototype.Draw = function (scene){
         // In debug mode, only visible nodes will be drawn.
-        this.PreOrderDraw(this.root, null, scene);
+        this.DrawPositionTree(scene);
+        //this.PreOrderDraw(this.root, true, scene);
     }
     
     BinaryTree.prototype._insert = function (node, v){
@@ -646,6 +666,7 @@ window.addEventListener('DOMContentLoaded', function () {
        
     function testBinaryTreeBuildPosition() {
         var bt = new BinaryTree(root);
+        bt.Debug(true);
         bt.BuildPositionTree(4);
         globalqueue.push(bt);
     }
