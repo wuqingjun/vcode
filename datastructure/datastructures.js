@@ -27,33 +27,16 @@ module.exports = {
         }
 
         this.AddInterval = function (objs, obje) {
-            var ids = [-1, -1];
             var nums = [objs, obje];
-            
-            for (var l = 0; l < this.periods.length; ++l) {
-                for (var k = 0; k < 2; ++k) {
-                    if (this.periods[l].start.value <= nums[k].value) {
-                        ids[k] = l + (this.periods[l].end.value < nums[k].value ? 1 : 0);
-                    }
-                }
+            var ids = [this.Search(objs), this.Search(obje)];
+            if (ids[0] === this.period.length) {
+                this.periods.push(new ds.Period(objs, obje));
+            } 
+            if (ids[1] < 0) {
+                this.periods.unshift(new ds.Period(objs, obje));
             }
-            if (ids[0] < 0 && ids[1] < 0) {
-                this.periods.unshift(new Period(objs, obje));
-            } else if (ids[0] === this.periods.length && ids[1] === this.periods.length) {
-                this.periods.push(new Period(objs, obje));
-            } else if (ids[0] < 0 && ids[1] === this.periods.length) {
-                this.periods.splice(0, ids[1]);
-                this.periods = [new Period(objs, obje)];
-            } else if (ids[0] < 0 && ids[1] < this.periods.length) {
-                this.periods.splice(0, ids[1]);
-                this.periods[0].start = objs;
-            } else if (ids[0] >= 0 && ids[1] === this.periods.length) {
-                this.periods.splice(ids[0] + 1);
-                this.periods[ids[0]].end = obje;
-            } else {
-                this.periods[ids[0]].end = this.periods[ids[1]].end;
-                this.periods.splice(ids[0] + 1, ids[1] - ids[0]);
-            }
+
+            /// to be continued!
         }
     }
 
