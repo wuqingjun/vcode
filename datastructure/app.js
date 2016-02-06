@@ -24,5 +24,24 @@ test.assert(i === -1 / 2);
 i = intervals.Search(new ds.Number(30));
 test.assert(i === 7 / 2);
 
+intervals.AddInterval(new ds.Number(3), new ds.Number(5));
+test.assert(intervals.periods.length === 3);
+test.assert(intervals.periods[0].start.value === 1);
+test.assert(intervals.periods[0].end.value === 7);
 
-console.log(Math.floor(3.5));
+intervals.AddInterval(new ds.Number(0), new ds.Number(0));
+test.assert(intervals.periods.length === 4);
+test.assert(intervals.periods[0].start.value === 0);
+test.assert(intervals.periods[0].end.value === 0);
+
+intervals.AddInterval(new ds.Number(30), new ds.Number(50));
+test.assert(intervals.periods.length === 5);
+test.assert(intervals.periods[4].start.value === 30);
+test.assert(intervals.periods[4].end.value === 50);
+
+intervals.AddInterval(new ds.Number(0), new ds.Number(90));
+test.assert(intervals.periods.length === 1);
+test.assert(intervals.periods[0].start.value === 0);
+test.assert(intervals.periods[0].end.value === 90);
+
+console.log("Good Job! All unit test cases are successful!");
