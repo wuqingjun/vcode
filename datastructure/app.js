@@ -51,7 +51,5 @@ intervals.AddInterval(num0, num90);
 test.assert(intervals.periods.length === 1);
 test.assert(intervals.periods[0].start.value === 0);
 test.assert(intervals.periods[0].end.value === 90);
-test.assert(intervals.periods[0].start === num0);
-test.assert(intervals.periods[0].end === num90);
 
 console.log("Good Job! All unit test cases are successful!");
