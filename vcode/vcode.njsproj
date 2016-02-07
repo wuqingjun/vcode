@@ -30,6 +30,7 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="public\datastructures.js" />
     <Compile Include="public\index.js" />
     <Compile Include="server.js" />
     <Content Include="package.json" />

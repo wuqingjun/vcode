@@ -40,7 +40,11 @@ window.addEventListener('DOMContentLoaded', function () {
         this.dimension = { x: this.scale, y: this.scale, z: 0 };
         this.drawFrame = true;
         this.lines = [];
-        this.showorder = increaseshoworder !== false ? ++root.predefinedshoworder : root.predefinedshoworder;
+        this.showorder = new IntervalList(); //increaseshoworder !== false ? ++root.predefinedshoworder : root.predefinedshoworder;
+        this.showorder.AddInterval(new Number(0), new Number(root.predefinedshoworder));
+        if (increaseshoworder) {
+            ++root.predefinedshoworder;
+        }
         this.origin = {
             x: this.parent === null ? 0 : this.parent.cursor.x, 
             y: this.parent === null ? 0 : this.parent.cursor.y, 
@@ -101,7 +105,10 @@ window.addEventListener('DOMContentLoaded', function () {
 
     Element.prototype.Draw = function (scene) {
         this.mesh = null;
-        if (this.showorder !== null && this.showorder <= root.globalshoworder) {
+        var i = this.showorder.Search(new Number(root.globalshoworder));
+        if(i === Math.ceil(i))
+        //if (this.showorder !== null && this.showorder <= root.globalshoworder)
+        {
             var mat = new BABYLON.StandardMaterial("element", scene);
             if (this.shape == 'disc') {
                 this.mesh = BABYLON.Mesh.CreateDisc("element", 0.5 * this.scale, 40, scene, false, 5);
@@ -695,13 +702,14 @@ window.addEventListener('DOMContentLoaded', function () {
     }
     
     
-    //testElement();
+    testElement();
+
     //testArrow();
     //testList();
     //testBinarySearch();
     //testMap();
     //testBinaryTreeBuildPosition();
-    testBinaryTreeInsertion();
+    //testBinaryTreeInsertion();
 
     var createScene = function (elements, map, hl) {
         globalx = 0;
