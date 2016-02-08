@@ -2,9 +2,12 @@
   "name": "datastructuretest",
   "version": "0.0.0",
   "description": "datastructuretest",
-  "main": "app.js",
+  "main": "datastructuretest.js",
   "author": {
     "name": "qjwu9_000",
     "email": ""
+  },
+  "dependencies": {
+    "unit.js": "^2.0.0"
   }
 }

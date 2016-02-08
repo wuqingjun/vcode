@@ -9,8 +9,6 @@ Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "vcode.test", "vcode.test\vc
 EndProject
 Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "datastructuretest", "datastructuretest\datastructuretest.njsproj", "{097F247C-9A98-420A-820B-5771B17DBE09}"
 EndProject
-Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "datastructure", "datastructure\datastructure.njsproj", "{BC58803B-6887-4434-A16B-D5C86C9B2C0E}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,10 +27,6 @@ Global
 		{097F247C-9A98-420A-820B-5771B17DBE09}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{097F247C-9A98-420A-820B-5771B17DBE09}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{097F247C-9A98-420A-820B-5771B17DBE09}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BC58803B-6887-4434-A16B-D5C86C9B2C0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BC58803B-6887-4434-A16B-D5C86C9B2C0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BC58803B-6887-4434-A16B-D5C86C9B2C0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BC58803B-6887-4434-A16B-D5C86C9B2C0E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
