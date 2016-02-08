@@ -41,12 +41,17 @@ var IntervalList = function () {
     }
 }
 
-(function (isNode) {
-        if (isNode) {
-            module.exports = {
-                Number: Number,
-                Period: Period,
-                IntervalList: IntervalList
-            };
-        }
-    })(typeof module !== 'undefined' && module.exports);
+if (module.exports ) {
+    module.exports = {
+        Number: Number,
+        Period: Period,
+        IntervalList: IntervalList
+    };
+}
+
+
+//(function (isNode) {
+        
+//})(module.exports);
+
+//typeof module !== 'undefined' && 

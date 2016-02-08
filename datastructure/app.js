@@ -1,4 +1,5 @@
-﻿var ds = require('./datastructures.js');
+﻿var ds = require('../vcode/public/datastructures.js');
+//var ds = require('./datastructures.js');
 var test = require('unit.js');
 
 var a = new ds.Number(2);
