@@ -2,7 +2,7 @@
     this.value = v;
 }
 
-var Period  = function(numbers, numbere) {
+var Period = function (numbers, numbere) {
     this.start = numbers;
     this.end = numbere;
 }
@@ -41,9 +41,12 @@ var IntervalList = function () {
     }
 }
 
-//module.exports = {
-//    Number: Number,
-//    Period: Period,
-//    IntervalList: IntervalList
-//}
-
+(function (isNode) {
+        if (isNode) {
+            module.exports = {
+                Number: Number,
+                Period: Period,
+                IntervalList: IntervalList
+            };
+        }
+    })(typeof module !== 'undefined' && module.exports);
