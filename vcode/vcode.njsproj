@@ -32,7 +32,9 @@
   <ItemGroup>
     <Compile Include="public\datastructures.js" />
     <Compile Include="public\index.js" />
+    <Compile Include="public\vcdatastructures.js" />
     <Compile Include="server.js" />
+    <Compile Include="vcode.js" />
     <Content Include="package.json" />
     <Content Include="public\index.html" />
     <Content Include="README.md" />

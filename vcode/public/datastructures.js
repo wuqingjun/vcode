@@ -41,17 +41,37 @@ var IntervalList = function () {
     }
 }
 
+function multiply(a, b) {
+    var c = [];
+    for (var i = 0; i < a.length; ++i) {
+        c[i] = [];
+        for (var j = 0; j < b[0].length; ++j) {
+            c[i][j] = 0;
+            for (var k = 0; k < b.length; ++k) {
+                c[i][j] += a[i][k] * b[k][j];
+            }
+        }
+    }
+    return c;
+}
+
+function rotate(origin, xangle, yangle, zangle) {
+    var matrixX = [[1, 0, 0], [0, Math.cos(xangle), -Math.sin(xangle)], [0, Math.sin(xangle), Math.cos(xangle)]];
+    var matrixY = [[Math.cos(yangle), 0, Math.sin(yangle)], [0, 1, 0], [-Math.sin(yangle), 0, Math.cos(yangle)]];
+    var matrixZ = [[Math.cos(zangle), -Math.sin(zangle), 0], [Math.sin(zangle), Math.cos(zangle), 0], [0, 0, 1]];
+    var cx = multiply(origin, matrixX);
+    var cy = multiply(cx, matrixY);
+    var cz = multiply(cy, matrixZ);
+    return cz;
+}
+
 if (typeof module !== 'undefined' && module.exports ) {
     module.exports = {
         Number: Number,
         Period: Period,
-        IntervalList: IntervalList
+        IntervalList: IntervalList,
+        multiply: multiply,
+        rotate: rotate
     };
 }
 
-
-//(function (isNode) {
-        
-//})(module.exports);
-
-//
