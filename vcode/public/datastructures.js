@@ -41,7 +41,7 @@ var IntervalList = function () {
     }
 }
 
-if (module.exports ) {
+if (typeof module !== 'undefined' && module.exports ) {
     module.exports = {
         Number: Number,
         Period: Period,
@@ -54,4 +54,4 @@ if (module.exports ) {
         
 //})(module.exports);
 
-//typeof module !== 'undefined' && 
+//

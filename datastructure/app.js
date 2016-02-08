@@ -1,5 +1,4 @@
 ﻿var ds = require('../vcode/public/datastructures.js');
-//var ds = require('./datastructures.js');
 var test = require('unit.js');
 
 var a = new ds.Number(2);
@@ -53,4 +52,4 @@ test.assert(intervals.periods.length === 1);
 test.assert(intervals.periods[0].start.value === 0);
 test.assert(intervals.periods[0].end.value === 90);
 
-console.log("Good Job! All unit test cases are successful!");
+console.log("Good Job! All unit test cases are successful!"); 
