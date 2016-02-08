@@ -30,13 +30,27 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="index.js" />
     <Compile Include="public\datastructures.js" />
+    <Compile Include="public\testbinarytreeinsertion.js" />
+    <Compile Include="public\testbinarytreebuildposition.js" />
+    <Compile Include="public\testmap.js" />
+    <Compile Include="public\testbinarysearch.js" />
+    <Compile Include="public\testarrow.js" />
+    <Compile Include="public\testlist.js" />
     <Compile Include="public\testelement.js" />
     <Compile Include="public\index.js" />
     <Compile Include="public\vcdatastructures.js" />
     <Compile Include="server.js" />
     <Compile Include="vcode.js" />
+    <Content Include="index.html" />
     <Content Include="package.json" />
+    <Content Include="public\testbinarytreeinsertion.html" />
+    <Content Include="public\testbinarytreebuildposition.html" />
+    <Content Include="public\testmap.html" />
+    <Content Include="public\testbinarysearch.html" />
+    <Content Include="public\testarrow.html" />
+    <Content Include="public\testlist.html" />
     <Content Include="public\testelement.html" />
     <Content Include="public\index.html" />
     <Content Include="README.md" />
