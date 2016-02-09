@@ -30,7 +30,6 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="index.js" />
     <Compile Include="public\datastructures.js" />
     <Compile Include="public\testbinarytreeinsertion.js" />
     <Compile Include="public\testbinarytreebuildposition.js" />
@@ -43,7 +42,6 @@
     <Compile Include="public\vcdatastructures.js" />
     <Compile Include="server.js" />
     <Compile Include="vcode.js" />
-    <Content Include="index.html" />
     <Content Include="package.json" />
     <Content Include="public\testbinarytreeinsertion.html" />
     <Content Include="public\testbinarytreebuildposition.html" />
