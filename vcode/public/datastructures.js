@@ -31,7 +31,7 @@ var IntervalList = function () {
     }
     
     this.Exists = function (ordernumber){
-        var i = this.Search(new Number(ordernumber));
+        var i = this.Search(ordernumber);
         return i === Math.ceil(i);
     }
     
