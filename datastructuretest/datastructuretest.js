@@ -7,6 +7,11 @@ var p = new ds.Period(new ds.Number(1), new ds.Number(5));
 test.assert(p.start.value === 1);
 test.assert(p.end.value === 5);
 
+a.Inc();
+test.assert(a.value === 3);
+a.IncBy(4);
+test.assert(a.value === 7);
+
 var b = new ds.Number(4);
 var p2 = new ds.Period(a, b);
 b.value = 5;
@@ -51,5 +56,10 @@ intervals.AddInterval(num0, num90);
 test.assert(intervals.periods.length === 1);
 test.assert(intervals.periods[0].start.value === 0);
 test.assert(intervals.periods[0].end.value === 90);
+
+var intervals1 = new ds.IntervalList();
+intervals1.AddInterval(new ds.Number(0), new ds.Number(0));
+
+test.assert(intervals1.Exists(new Number(0)));
 
 console.log("Good Job! All unit test cases are successful!"); 

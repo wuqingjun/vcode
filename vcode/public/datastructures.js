@@ -1,5 +1,11 @@
 ﻿var Number = function (v) {
     this.value = v;
+    this.Inc = function () {
+        this.value += 1;
+    };
+    this.IncBy = function (n) {
+        this.value += n;
+    }
 }
 
 var Period = function (numbers, numbere) {
@@ -22,6 +28,11 @@ var IntervalList = function () {
             }
         }
         return (l + h) / 2;
+    }
+    
+    this.Exists = function (ordernumber){
+        var i = this.Search(new Number(ordernumber));
+        return i === Math.ceil(i);
     }
     
     this.AddInterval = function (objs, obje) {
