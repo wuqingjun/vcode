@@ -15,13 +15,13 @@ var Period = function (numbers, numbere) {
 
 var IntervalList = function () {
     this.periods = [];
-    this.Search = function (objNumber) {
+    this.Search = function (value) {
         var l = 0, h = this.periods.length - 1;
         while (l <= h) {
             var m = Math.floor((l + h) / 2);
-            if (this.periods[m].start.value <= objNumber.value && this.periods[m].end.value >= objNumber.value) {
+            if (this.periods[m].start.value <= value && this.periods[m].end.value >= value) {
                 return m;
-            } else if (this.periods[m].start.value > objNumber.value) {
+            } else if (this.periods[m].start.value > value) {
                 h = m - 1;
             } else {
                 l = m + 1;
@@ -36,7 +36,7 @@ var IntervalList = function () {
     }
     
     this.AddInterval = function (objs, obje) {
-        var ids = [this.Search(objs), this.Search(obje)];
+        var ids = [this.Search(objs.value), this.Search(obje.value)];
         if (ids[0] === Math.ceil(ids[0])) {
             objs = this.periods[ids[0]].start;
         } else {

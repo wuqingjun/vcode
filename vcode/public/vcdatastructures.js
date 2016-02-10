@@ -10,6 +10,7 @@
     this.dimension = { x: this.scale, y: this.scale, z: 0 };
     this.drawFrame = true;
     this.lines = [];
+    this.increaseshoworder = increaseshoworder || false;
     this.showorder = new IntervalList(); //increaseshoworder !== false ? ++root.predefinedshoworder : root.predefinedshoworder;
     this.AddShowInterval(new Number(root.predefinedshoworder.value), root.predefinedshoworder);
     if (increaseshoworder) {
@@ -26,6 +27,9 @@
 
 Element.prototype.AddShowInterval = function (objs, obje){
     this.showorder.AddInterval(objs, obje);
+    if (this.parent !== null) {
+        this.parent.AddShowInterval(objs, obje);
+    }
 }
 
 Element.prototype.rotate = function (x, y, z) {
@@ -79,8 +83,7 @@ Element.prototype.NextColumn = function (v) {
     
 Element.prototype.Draw = function (scene) {
     this.mesh = null;
-    //var i = this.showorder.Search(new Number(root.globalshoworder));
-    if (this.showorder.Exists(new Number(root.globalshoworder))) {
+    if (this.showorder.Exists(root.globalshoworder)) {
         var mat = new BABYLON.StandardMaterial("element", scene);
         if (this.shape == 'disc') {
             this.mesh = BABYLON.Mesh.CreateDisc("element", 0.5 * this.scale, 40, scene, false, 5);
@@ -126,6 +129,10 @@ Element.prototype.Draw = function (scene) {
     }
     return this.mesh;
 }
+
+//var root = new Element(null, null, false, 'square', 1.0);
+//root.predefinedshoworder = new Number(0);
+//root.globalshoworder = 0;
     
 var root = {
     origin: { x: 0, y: 0, z: 0 },
@@ -135,7 +142,10 @@ var root = {
     //predefinedshoworder: 0, 
     predefinedshoworder: new Number(0), 
     globalshoworder: 0, 
-    globalhighlightorder: 0,
+    showorder: new IntervalList(),
+    AddShowInterval: function (objs, obje){
+        this.showorder.AddInterval(objs, obje);
+    },
     scale: 1.0,
     dimension: { x: 0, y: 0, z: 0 },
     alignment: 'horizontal', // 'horizontal', 'vertical', 'diagonal'
@@ -175,7 +185,7 @@ function List(parent, onebyone, highlighted, shape, islinkedlist, scale) {
     this.scale = scale || (parent !== null ? parent.scale : 1.0);
     this.highlighted = highlighted || false;
     this.islinkedlist = islinkedlist || false;
-    this.showorder = parent !== null ? ++parent.predefinedshoworder : 0;
+    this.showorder = new IntervalList(); //parent !== null ? ++parent.predefinedshoworder : 0;
     this.dimension = { x: 0, y: 0, z: 0 };
     this.alignment = 'horizontal', // 'vertical', 'diagonal'
     this.origin = {
@@ -224,7 +234,7 @@ List.prototype.translate = function (dx, dy, dz) {
     
 List.prototype.Draw = function (scene) {
     this.mesh = null;
-    //if (this.showorder !== null && this.showorder <= root.globalshoworder)
+    if(this.showorder.Exists(root.globalshoworder))
     {
         for (var i = 0; i < this.elements.length; ++i) {
             var e = this.elements[i].Draw(scene);

@@ -24,16 +24,17 @@ intervals.periods.push(new ds.Period(new ds.Number(4), new ds.Number(7)));
 intervals.periods.push(new ds.Period(new ds.Number(10), new ds.Number(11)));
 intervals.periods.push(new ds.Period(new ds.Number(16), new ds.Number(23)));
 
-var i = intervals.Search(new ds.Number(8));
+var i = intervals.Search(8);
 test.assert(i === 3 / 2)
-i = intervals.Search(new ds.Number(6));
+i = intervals.Search(6);
 test.assert(i === 1);
 
-i = intervals.Search(new ds.Number(0));
+i = intervals.Search(0);
 test.assert(i === -1 / 2);
 
-i = intervals.Search(new ds.Number(30));
+i = intervals.Search(30);
 test.assert(i === 7 / 2);
+i = intervals.Search(3);
 
 intervals.AddInterval(new ds.Number(3), new ds.Number(5));
 test.assert(intervals.periods.length === 3);
@@ -60,6 +61,6 @@ test.assert(intervals.periods[0].end.value === 90);
 var intervals1 = new ds.IntervalList();
 intervals1.AddInterval(new ds.Number(0), new ds.Number(0));
 
-test.assert(intervals1.Exists(new Number(0)));
+test.assert(intervals1.Exists(0));
 
 console.log("Good Job! All unit test cases are successful!"); 
