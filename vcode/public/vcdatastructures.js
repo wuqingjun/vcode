@@ -374,7 +374,7 @@ Map.prototype.rotate = function (x, y, z) {
 }
     
 Map.prototype.Draw = function (scene) {
-    if (this.showorder !== null && this.showorder <= root.globalshoworder) {
+    if (this.showorder.Exists(root.globalshoworder)) {
         for (var i = 0; i < this.lists.length; ++i) {
             this.lists[i].Draw(scene);
         }
@@ -516,7 +516,9 @@ BinaryTree.prototype.Debug = function (dbg) {
 BinaryTree.prototype.Draw = function (scene) {
     // In debug mode, only visible nodes will be drawn.
     //this.DrawPositionTree(scene);
-    this.PreOrderDraw(this.root, true, scene);
+    if (this.showorder.Exists(root.globalshoworder)) {
+        this.PreOrderDraw(this.root, true, scene);
+    }
 }
     
 BinaryTree.prototype._insert = function (node, v) {
@@ -524,7 +526,9 @@ BinaryTree.prototype._insert = function (node, v) {
         if (!node.visible) {
             node.value = v;
             node.visible = true;
-            node.element.showorder = ++root.predefinedshoworder;
+            // this needs be fixed.
+            // and root/Element can share the same base class. will refactor this later.
+            //node.element.showorder = ++root.predefinedshoworder;
             node.element.highlightorder.push(++this.parent.predefinedshoworder);
             if (node.parent !== null && node.parent.visible) {
                 for (var i = 0; i < node.lines.length; ++i) {
