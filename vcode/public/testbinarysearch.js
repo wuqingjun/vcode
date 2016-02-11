@@ -57,7 +57,7 @@ window.addEventListener('DOMContentLoaded', function () {
 	}
 	
 	engine.runRenderLoop(function () {
-        if (root.globalshoworder  <= root.predefinedshoworder) {
+        if (root.globalshoworder  <= root.predefinedshoworder.value) {
             if (total % 30 === 19) {
                 var scene = createScene();
                 scene.render();

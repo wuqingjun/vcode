@@ -219,7 +219,8 @@ List.prototype.AddRange = function (arr) {
 List.prototype.At = function (i) {
     if (this.elements.length > 0) {
         var index = this.islinkedlist ? 2 * i : i;
-        this.elements[index].highlightorder.push(++this.parent.predefinedshoworder);
+        // highlight order needs be fixed.
+        //this.elements[index].highlightorder.push(++this.parent.predefinedshoworder);
         return this.elements[index];
     }
     return null;
