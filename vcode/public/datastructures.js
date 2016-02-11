@@ -15,6 +15,9 @@ var Period = function (numbers, numbere) {
 
 var IntervalList = function () {
     this.periods = [];
+    this.Clear = function (){
+        this.periods = [];
+    }
     this.Search = function (value) {
         var l = 0, h = this.periods.length - 1;
         while (l <= h) {

@@ -16,7 +16,6 @@ window.addEventListener('DOMContentLoaded', function () {
         bt.Insert(9);
         bt.Insert(7);
         bt.Insert(8);
-        bt.Draw();
         globalqueue.push(bt);
     }
     

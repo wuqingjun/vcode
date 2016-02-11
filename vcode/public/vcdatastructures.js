@@ -139,7 +139,6 @@ var root = {
     cursor: { x: 0, y: 0, z: 0 },
     shape: 'square',
     color: new BABYLON.Color3.Yellow,
-    //predefinedshoworder: 0, 
     predefinedshoworder: new Number(0), 
     globalshoworder: 0, 
     showorder: new IntervalList(),
@@ -437,8 +436,7 @@ BinaryTree.prototype.BuildPositionTree = function (l) {
         if (l === 1 || i !== 0) {
             var n = new TreeNode(i, 0, 0);
             a[0].push(n);
-            n.element = new Element(n.value, this.parent, false, "disc", this.nodescale);
-            //n.highlightorders.push(this.parent.predefinedshoworder);
+            n.element = new Element(n.value, this, false, "disc", this.nodescale);
             n.element.drawFrame = false;
             n.element.locate(n.x, n.y, 0);
         }
@@ -455,7 +453,6 @@ BinaryTree.prototype.BuildPositionTree = function (l) {
             n.left.parent = n;
             n.right.parent = n;
             n.element = new Element(n.value, this.parent, false, "disc", this.nodescale);
-            //n.highlightorders.push(this.parent.predefinedshoworder);
             n.element.drawFrame = false;
             n.element.locate(n.x, n.y, 0);
                 
@@ -476,13 +473,13 @@ BinaryTree.prototype.BuildPositionTree = function (l) {
     
 BinaryTree.prototype.PreOrderDraw = function (t, visible, scene) {
     if (null !== t && (visible === null || t.visible === visible)) {
-        var oldvisible = 0, oldvisible0 = null, oldvisible1 = null;
+        var oldvisible = t.visible, oldvisible0 = null, oldvisible1 = null;
         if (this.debug) {
             t.visible = true;
         }
         if (t.element.lines.length > 0 && this.debug === true) {
-            var oldvisible0 = t.element.lines[0].visible;
-            var oldvisible1 = t.element.lines[1].visible;
+            oldvisible0 = t.element.lines[0].visible;
+            oldvisible1 = t.element.lines[1].visible;
             t.element.lines[0].visible = true;
             t.element.lines[1].visible = true;
         }
@@ -517,7 +514,11 @@ BinaryTree.prototype.Draw = function (scene) {
     // In debug mode, only visible nodes will be drawn.
     //this.DrawPositionTree(scene);
     if (this.showorder.Exists(root.globalshoworder)) {
-        this.PreOrderDraw(this.root, true, scene);
+        if (this.Debug) {
+            this.PreOrderDraw(this.root, null, scene);
+        } else {
+            this.PreOrderDraw(this.root, true, scene);
+        }
     }
 }
     
@@ -526,13 +527,15 @@ BinaryTree.prototype._insert = function (node, v) {
         if (!node.visible) {
             node.value = v;
             node.visible = true;
-            // this needs be fixed.
-            // and root/Element can share the same base class. will refactor this later.
-            //node.element.showorder = ++root.predefinedshoworder;
-            node.element.highlightorder.push(++this.parent.predefinedshoworder);
+            node.element.showorder.Clear();
+            node.element.showorder.AddInterval(new Number(root.predefinedshoworder.value), root.predefinedshoworder);
+            node.element.value = v;
+            root.predefinedshoworder.Inc();
             if (node.parent !== null && node.parent.visible) {
-                for (var i = 0; i < node.lines.length; ++i) {
-                    node.element.lines[0].visible = true;
+                if (node.parent.left === node) {
+                    node.parent.element.lines[0].visible = true;
+                } else {
+                    node.parent.element.lines[1].visible = true;
                 }
             }
             return node;
