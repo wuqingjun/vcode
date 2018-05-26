@@ -120,8 +120,8 @@ window.addEventListener('DOMContentLoaded', function () {
     
     testElement();
 
-    //testArrow();
-    //testList();
+    testArrow();
+    testList();
     //testBinarySearch();
     //testMap();
     //testBinaryTreeBuildPosition();
